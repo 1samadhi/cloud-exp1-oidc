@@ -4,6 +4,47 @@ Solucion de la Experiencia 1 de Cloud: tres microservicios Spring Boot desacopla
 de la logica de autenticacion, protegidos con OAuth 2.0 y publicados a Internet
 a traves de AWS API Gateway.
 
+## Despliegue en marcha
+
+| Recurso        | Valor                                              |
+|----------------|----------------------------------------------------|
+| URL publica    | https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo |
+| HTTP API       | `j37oj1wn16`                                         |
+| Instancia EC2  | `i-0314ddd12fadeb125`                              |
+
+## Arquitectura
+
+```
+                    Internet
+                       |
+                       v
+        +--------------------------------+
+        |   AWS API Gateway (HTTP API)    |
+        |   stage: desarrollo — HTTPS     |
+        |                                 |
+        |   Autorizador JWT               |
+        |   issuer = este mismo stage     |
+        +----------------+----------------+
+                         | HTTP
+                         v
+        +--------------------------------+
+        |   EC2 t3.small — Docker Compose |
+        |                                 |
+        |   front-end     :80   nginx     |
+        |   ms-auth       :9000 IdP OIDC  |
+        |   ms-productos  :8081 Resource  |
+        |   ms-pedidos    :8082 Resource  |
+        +--------------------------------+
+
+Emisores aceptados por los Resource Server:
+  - ms-auth (propio)   RS256, JWKS publicado por el gateway
+  - Amazon Cognito     maquina a maquina
+  - Microsoft Entra ID login de usuarios desde el frontend
+```
+
+Solo el API Gateway ofrece HTTPS. Los microservicios no confian en la red: cada
+peticion se autoriza por el token, tanto en el borde como dentro de cada servicio.
+
 ## Microservicios
 
 | Servicio       | Puerto | Rol                                                |
@@ -95,6 +136,15 @@ lugar de confiar ciegamente en el llamador interno.
 | `SEGURIDAD_AUDIENCIAS`| productos, pedidos  | Audiencias aceptadas. Vacio desactiva el chequeo|
 | `SEGURIDAD_ORIGENES_CORS` | productos, pedidos | Origenes del frontend permitidos             |
 | `PRODUCTOS_URL`       | ms-pedidos          | URL base de ms-productos                        |
+
+## Documentacion
+
+| Documento                     | Contenido                                     |
+|-------------------------------|-----------------------------------------------|
+| `docs/01-cognito.md`          | User Pool, resource server y flujo maquina a maquina |
+| `docs/02-entra-id.md`         | Registro en Azure, exponer la API y MSAL      |
+| `docs/03-api-gateway.md`      | Rutas, autorizador JWT y la IP cambiante      |
+| `docs/04-despliegue-ec2.md`   | La instancia, SSM y el control de costos      |
 
 ## Como ejecutar
 

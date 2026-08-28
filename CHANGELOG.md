@@ -2,6 +2,19 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [3.1.0]
+
+- Despliegue en **EC2 t3.small** con Docker Compose, operado por **SSM** sin SSH.
+- **AWS API Gateway** (HTTP API) como unico punto de entrada publico, con doce
+  rutas y una integracion por ruta.
+- **Autorizador JWT** en el borde, con el issuer del Identity Provider propio.
+  Las rutas de discovery quedan publicas para que AWS pueda descargar el JWKS.
+- Segundo autorizador preconfigurado para Cognito, listo para asociar a rutas.
+- `scripts/actualizar-api-gateway.sh`: re-apunta las integraciones cuando la EC2
+  cambia de IP publica al reiniciarse el laboratorio.
+- `scripts/desplegar-en-ec2.sh`: despliegue remoto por SSM.
+- `docs/03-api-gateway.md` y `docs/04-despliegue-ec2.md`.
+
 ## [3.0.0]
 
 Cambio mayor: la solucion deja de ser solo backend y suma frontend.
