@@ -2,6 +2,18 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [2.2.0]
+
+- Se incorpora **Amazon Cognito** como segundo emisor confiable (Identity as a
+  Service), con User Pool, resource server `exp1-api` y cliente maquina a maquina
+  con flujo `client_credentials`.
+- El convertidor de autoridades recorta el prefijo que Cognito antepone a los
+  scopes (`exp1-api/pedidos.escribir` pasa a `SCOPE_pedidos.escribir`), sin lo
+  cual el token seria valido pero `@PreAuthorize` devolveria 403.
+- `docs/01-cognito.md` con el paso a paso y los identificadores del pool.
+- `.env.example` con las variables necesarias.
+- Los microservicios no cambiaron para aceptar Cognito: solo su configuracion.
+
 ## [2.1.0]
 
 - `ms-productos` y `ms-pedidos` pasan a ser **Resource Server OAuth 2.0**: ya no

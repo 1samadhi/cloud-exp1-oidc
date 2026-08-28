@@ -101,7 +101,11 @@ public class SecurityConfig {
             if (scopes != null) {
                 for (String s : scopes.split(" ")) {
                     if (!s.isBlank()) {
-                        autoridades.add(new SimpleGrantedAuthority("SCOPE_" + s));
+                        // Cognito antepone el identificador del resource server
+                        // ("exp1-api/pedidos.escribir"). Se recorta el prefijo para
+                        // que los tres emisores compartan el mismo vocabulario.
+                        String nombre = s.contains("/") ? s.substring(s.lastIndexOf('/') + 1) : s;
+                        autoridades.add(new SimpleGrantedAuthority("SCOPE_" + nombre));
                     }
                 }
             }
