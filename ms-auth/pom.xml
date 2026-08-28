@@ -13,7 +13,7 @@
 
   <groupId>cl.duoc.cloud</groupId>
   <artifactId>ms-auth</artifactId>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <name>ms-auth</name>
   <description>Identity Provider OIDC propio</description>
 
@@ -26,9 +26,24 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-webmvc</artifactId>
     </dependency>
+    <!-- Spring Security: filtros, codificacion de contrasenias y proteccion de /auth/userinfo -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <!-- Resource Server: aporta Nimbus JOSE para firmar en RS256 y publicar el JWKS -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

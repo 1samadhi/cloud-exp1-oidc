@@ -20,10 +20,37 @@ a traves de AWS API Gateway.
 
 ## Endpoints disponibles
 
-### ms-auth
-| Metodo | Ruta              | Descripcion                    |
-|--------|-------------------|--------------------------------|
-| GET    | `/api/v1/estado`  | Estado y version del servicio  |
+### ms-auth — Identity Provider OIDC
+| Metodo | Ruta                                    | Auth | Descripcion                          |
+|--------|-----------------------------------------|------|--------------------------------------|
+| POST   | `/auth/login`                           | No   | Valida credenciales y emite tokens   |
+| GET    | `/auth/userinfo`                        | Si   | Claims del token presentado          |
+| GET    | `/.well-known/openid-configuration`     | No   | Metadatos OIDC del emisor            |
+| GET    | `/.well-known/jwks.json`                | No   | Llaves publicas para validar la firma|
+| GET    | `/api/v1/estado`                        | No   | Estado y version del servicio        |
+
+Usuarios de prueba:
+
+| Usuario   | Contrasenia  | Roles                   |
+|-----------|--------------|-------------------------|
+| `admin`   | `admin123`   | `ROLE_ADMIN`, `ROLE_USER` |
+| `cliente` | `cliente123` | `ROLE_USER`             |
+
+Obtener un token:
+
+```bash
+curl -X POST http://localhost:9000/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"admin123"}'
+```
+
+#### Por que RS256 y no HS256
+
+El autorizador JWT de AWS API Gateway verifica la firma descargando las llaves
+publicas desde el `jwks_uri` que anuncia el discovery del emisor. Con HS256 la
+firma depende de un secreto compartido que AWS nunca va a tener, asi que el
+autorizador no podria validar nada. Por eso el IdP firma con RSA y publica su
+llave publica.
 
 ### ms-productos
 | Metodo | Ruta                  | Descripcion               |

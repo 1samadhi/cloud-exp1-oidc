@@ -4,3 +4,11 @@ server:
 spring:
   application:
     name: ms-auth
+
+oidc:
+  # Debe coincidir exactamente con el claim "iss" que espera el autorizador de
+  # AWS API Gateway. En local es el propio host; en AWS, la URL del stage.
+  issuer: ${OIDC_ISSUER:http://localhost:9000}
+  audiencia: ${OIDC_AUDIENCIA:exp1-api}
+  vigencia-segundos: ${OIDC_VIGENCIA:3600}
+  ruta-llave: ${OIDC_RUTA_LLAVE:./llaves/jwk.json}
