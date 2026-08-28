@@ -2,6 +2,12 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [1.1.1]
+
+- Correccion: `GET /api/v1/productos/{id}` respondia 500 ante un id inexistente porque
+  `orElseThrow()` propagaba `NoSuchElementException`. Ahora responde 404.
+- Pruebas de `ProductoV1Controller` cubriendo los casos 200 y 404.
+
 ## [1.1.0]
 
 - `ms-productos`: nuevo endpoint `GET /api/v1/productos/{id}` para consultar un producto puntual.

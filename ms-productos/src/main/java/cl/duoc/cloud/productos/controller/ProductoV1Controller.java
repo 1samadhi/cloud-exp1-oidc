@@ -2,6 +2,7 @@ package cl.duoc.cloud.productos.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,8 +26,15 @@ public class ProductoV1Controller {
         return servicio.listar();
     }
 
+    /**
+     * Un id inexistente devolvia 500 porque orElseThrow() propagaba
+     * NoSuchElementException. No es un fallo del servidor sino un recurso
+     * ausente, asi que ahora responde 404.
+     */
     @GetMapping("/{id}")
-    public Producto obtener(@PathVariable Long id) {
-        return servicio.buscarPorId(id).orElseThrow();
+    public ResponseEntity<Producto> obtener(@PathVariable Long id) {
+        return servicio.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
