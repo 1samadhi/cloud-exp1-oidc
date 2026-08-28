@@ -2,6 +2,11 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [1.1.0]
+
+- `ms-productos`: nuevo endpoint `GET /api/v1/productos/{id}` para consultar un producto puntual.
+- `ms-pedidos`: nuevo endpoint `POST /api/v1/pedidos` para registrar un pedido.
+
 ## [1.0.0]
 
 - Creacion de los tres microservicios base: `ms-auth`, `ms-productos` y `ms-pedidos`.

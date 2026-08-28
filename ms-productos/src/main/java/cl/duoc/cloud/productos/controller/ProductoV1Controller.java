@@ -3,6 +3,7 @@ package cl.duoc.cloud.productos.controller;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,5 +23,10 @@ public class ProductoV1Controller {
     @GetMapping
     public List<Producto> listar() {
         return servicio.listar();
+    }
+
+    @GetMapping("/{id}")
+    public Producto obtener(@PathVariable Long id) {
+        return servicio.buscarPorId(id).orElseThrow();
     }
 }

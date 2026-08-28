@@ -28,12 +28,14 @@ a traves de AWS API Gateway.
 ### ms-productos
 | Metodo | Ruta                  | Descripcion               |
 |--------|-----------------------|---------------------------|
-| GET    | `/api/v1/productos`   | Lista el catalogo         |
+| GET    | `/api/v1/productos`      | Lista el catalogo         |
+| GET    | `/api/v1/productos/{id}` | Consulta un producto      |
 
 ### ms-pedidos
 | Metodo | Ruta                | Descripcion            |
 |--------|---------------------|------------------------|
 | GET    | `/api/v1/pedidos`   | Lista los pedidos      |
+| POST   | `/api/v1/pedidos`   | Registra un pedido     |
 
 ## Como ejecutar
 
