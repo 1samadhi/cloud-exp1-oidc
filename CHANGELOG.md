@@ -2,6 +2,20 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [2.1.0]
+
+- `ms-productos` y `ms-pedidos` pasan a ser **Resource Server OAuth 2.0**: ya no
+  gestionan contrasenias, solo verifican la firma del JWT contra las llaves
+  publicas del emisor.
+- Resolucion **multi emisor** (`JwtIssuerAuthenticationManagerResolver`): la lista
+  de emisores confiables es configuracion (`SEGURIDAD_EMISORES`), no codigo.
+- Los scopes y roles de cualquier emisor se normalizan a `SCOPE_x` y `ROLE_x`.
+- Autorizacion por scope con `@PreAuthorize` en `POST /api/v1/pedidos`.
+- `GET /api/v1/public` queda abierto en ambos servicios para comprobar despliegues.
+- `ms-pedidos` valida el producto contra `ms-productos` **propagando el token**
+  del usuario en lugar de usar una credencial de servicio.
+- Los pedidos se asocian al `sub` del token, no a un campo enviado por el cliente.
+
 ## [2.0.0]
 
 Cambio mayor: `ms-auth` deja de ser un servicio de estado y pasa a ser un

@@ -4,3 +4,8 @@ server:
 spring:
   application:
     name: ms-productos
+
+seguridad:
+  # Emisores cuyos tokens acepta este Resource Server. Se agregan Cognito y
+  # Entra ID separandolos por coma, sin tocar el codigo.
+  emisores: ${SEGURIDAD_EMISORES:http://localhost:9000}

@@ -58,11 +58,26 @@ llave publica.
 | GET    | `/api/v1/productos`      | Lista el catalogo         |
 | GET    | `/api/v1/productos/{id}` | Consulta un producto      |
 
-### ms-pedidos
-| Metodo | Ruta                | Descripcion            |
-|--------|---------------------|------------------------|
-| GET    | `/api/v1/pedidos`   | Lista los pedidos      |
-| POST   | `/api/v1/pedidos`   | Registra un pedido     |
+### ms-pedidos — Resource Server
+| Metodo | Ruta                | Auth | Descripcion                                        |
+|--------|---------------------|------|----------------------------------------------------|
+| GET    | `/api/v1/public`    | No   | Comprobacion de despliegue                         |
+| GET    | `/api/v1/pedidos`   | Si   | Pedidos del usuario del token                      |
+| POST   | `/api/v1/pedidos`   | Si   | Crea un pedido — requiere scope `pedidos.escribir` |
+
+`POST /api/v1/pedidos` valida el producto llamando a `ms-productos` y reenviando
+el mismo token del usuario, de modo que la identidad viaja entre servicios en
+lugar de confiar ciegamente en el llamador interno.
+
+## Variables de entorno
+
+| Variable              | Servicio            | Descripcion                                     |
+|-----------------------|---------------------|-------------------------------------------------|
+| `OIDC_ISSUER`         | ms-auth             | Valor del claim `iss`. En AWS, la URL del stage |
+| `OIDC_AUDIENCIA`      | ms-auth             | Valor del claim `aud`                           |
+| `OIDC_RUTA_LLAVE`     | ms-auth             | Ruta del JWK persistido                         |
+| `SEGURIDAD_EMISORES`  | productos, pedidos  | Emisores confiables, separados por coma         |
+| `PRODUCTOS_URL`       | ms-pedidos          | URL base de ms-productos                        |
 
 ## Como ejecutar
 

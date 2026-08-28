@@ -4,3 +4,9 @@ server:
 spring:
   application:
     name: ms-pedidos
+
+seguridad:
+  emisores: ${SEGURIDAD_EMISORES:http://localhost:9000}
+
+servicios:
+  productos-url: ${PRODUCTOS_URL:http://localhost:8081}

@@ -18,8 +18,8 @@ public class PedidoService {
     private final List<Pedido> pedidos = new CopyOnWriteArrayList<>();
     private final AtomicLong secuencia = new AtomicLong(1);
 
-    public List<Pedido> listar() {
-        return List.copyOf(pedidos);
+    public List<Pedido> listarPorCliente(String cliente) {
+        return pedidos.stream().filter(p -> p.cliente().equals(cliente)).toList();
     }
 
     public Pedido crear(String cliente, Long productoId, int cantidad) {
