@@ -30,6 +30,9 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.oauth2.server.resource.authentication.JwtIssuerAuthenticationManagerResolver;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -48,12 +51,15 @@ public class SecurityConfig {
 
     private final List<String> emisoresConfiables;
     private final List<String> audienciasAceptadas;
+    private final List<String> origenesPermitidos;
     private final Map<String, AuthenticationManager> gestores = new ConcurrentHashMap<>();
 
     public SecurityConfig(@Value("${seguridad.emisores}") List<String> emisoresConfiables,
-            @Value("${seguridad.audiencias:}") List<String> audienciasAceptadas) {
+            @Value("${seguridad.audiencias:}") List<String> audienciasAceptadas,
+            @Value("${seguridad.origenes-cors}") List<String> origenesPermitidos) {
         this.emisoresConfiables = limpiar(emisoresConfiables);
         this.audienciasAceptadas = limpiar(audienciasAceptadas);
+        this.origenesPermitidos = limpiar(origenesPermitidos);
     }
 
     private static List<String> limpiar(List<String> valores) {
@@ -64,12 +70,31 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(configuracionCors()))
                 .authorizeHttpRequests(rutas -> rutas
                         .requestMatchers("/api/v1/public").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationManagerResolver(resolverDeEmisores()));
         return http.build();
+    }
+
+
+    /**
+     * Sin CORS el navegador aborta la peticion en el preflight OPTIONS y el
+     * frontend nunca llega a enviar el header Authorization. Los origenes son
+     * configuracion porque cambian entre desarrollo y el stage del API Gateway.
+     */
+    @Bean
+    public CorsConfigurationSource configuracionCors() {
+        CorsConfiguration configuracion = new CorsConfiguration();
+        configuracion.setAllowedOrigins(origenesPermitidos);
+        configuracion.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuracion.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuracion.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource fuente = new UrlBasedCorsConfigurationSource();
+        fuente.registerCorsConfiguration("/**", configuracion);
+        return fuente;
     }
 
     /**

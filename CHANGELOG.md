@@ -2,6 +2,14 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [2.4.0]
+
+- CORS configurable en ambos Resource Server (`seguridad.origenes-cors`). Sin
+  esto el navegador aborta la peticion en el preflight `OPTIONS` y el frontend
+  nunca alcanza a enviar el header `Authorization`.
+- Se permiten solo los metodos y cabeceras que la aplicacion usa, y se limita a
+  los origenes configurados: un origen desconocido recibe 403 en el preflight.
+
 ## [2.3.0]
 
 - Se incorpora **Microsoft Entra ID** como tercer emisor confiable. El

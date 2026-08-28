@@ -9,6 +9,8 @@ seguridad:
   emisores: ${SEGURIDAD_EMISORES:http://localhost:9000}
   # Vacio desactiva la validacion de audiencia. Ver docs/02-entra-id.md.
   audiencias: ${SEGURIDAD_AUDIENCIAS:}
+  # Origenes del frontend. En desarrollo Vite; en AWS, la URL del stage.
+  origenes-cors: ${SEGURIDAD_ORIGENES_CORS:http://localhost:5173}
 
 servicios:
   productos-url: ${PRODUCTOS_URL:http://localhost:8081}

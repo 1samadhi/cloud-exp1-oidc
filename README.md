@@ -78,6 +78,7 @@ lugar de confiar ciegamente en el llamador interno.
 | `OIDC_RUTA_LLAVE`     | ms-auth             | Ruta del JWK persistido                         |
 | `SEGURIDAD_EMISORES`  | productos, pedidos  | Emisores confiables, separados por coma         |
 | `SEGURIDAD_AUDIENCIAS`| productos, pedidos  | Audiencias aceptadas. Vacio desactiva el chequeo|
+| `SEGURIDAD_ORIGENES_CORS` | productos, pedidos | Origenes del frontend permitidos             |
 | `PRODUCTOS_URL`       | ms-pedidos          | URL base de ms-productos                        |
 
 ## Como ejecutar
