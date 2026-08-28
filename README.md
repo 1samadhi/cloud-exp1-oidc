@@ -11,10 +11,25 @@ a traves de AWS API Gateway.
 | `ms-auth`      | 9000   | Identity Provider propio (OIDC)                    |
 | `ms-productos` | 8081   | Catalogo de productos — Resource Server            |
 | `ms-pedidos`   | 8082   | Gestion de pedidos — Resource Server               |
+| `front-end`    | 80     | SPA React + Vite con MSAL                          |
+
+## Emisores de identidad
+
+Los Resource Server aceptan tokens de tres emisores a la vez, resueltos por el
+claim `iss` del token entrante:
+
+| Emisor                | Rol en la solucion                                 |
+|-----------------------|----------------------------------------------------|
+| `ms-auth` (propio)    | Identity Provider OIDC construido en el proyecto   |
+| Amazon Cognito        | Identity as a Service, flujo maquina a maquina     |
+| Microsoft Entra ID    | Login de usuarios desde el frontend con MSAL       |
+
+Agregar o quitar un emisor es cambiar `SEGURIDAD_EMISORES`, sin recompilar.
 
 ## Stack
 
 - Java 21, Spring Boot 4.1.0
+- React 18 + Vite, MSAL para Entra ID
 - Docker (multistage, usuario no root) y Docker Compose
 - AWS EC2 + AWS API Gateway (HTTP API)
 

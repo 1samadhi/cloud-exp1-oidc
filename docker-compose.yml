@@ -1,24 +1,72 @@
+# Stack completo. Las variables salen de .env (ver .env.example).
+#
+#   docker compose --env-file .env up --build -d
+#
 services:
   ms-auth:
     build: ./ms-auth
-    image: exp1/ms-auth:1.0.0
+    image: exp1/ms-auth:3.0.0
     container_name: ms-auth
     restart: unless-stopped
     ports:
       - "9000:9000"
+    environment:
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:9000}
+      OIDC_AUDIENCIA: ${OIDC_AUDIENCIA:-exp1-api}
+      OIDC_RUTA_LLAVE: /app/llaves/jwk.json
+    volumes:
+      # La llave RSA debe sobrevivir a los reinicios: si cambia, los tokens ya
+      # emitidos y el JWKS cacheado por AWS API Gateway dejan de coincidir.
+      - llaves_auth:/app/llaves
 
   ms-productos:
     build: ./ms-productos
-    image: exp1/ms-productos:1.0.0
+    image: exp1/ms-productos:3.0.0
     container_name: ms-productos
     restart: unless-stopped
     ports:
       - "8081:8081"
+    environment:
+      SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-http://localhost:9000}
+      SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-}
+      SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:5173}
 
   ms-pedidos:
     build: ./ms-pedidos
-    image: exp1/ms-pedidos:1.0.0
+    image: exp1/ms-pedidos:3.0.0
     container_name: ms-pedidos
     restart: unless-stopped
     ports:
       - "8082:8082"
+    depends_on:
+      - ms-productos
+    environment:
+      SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-http://localhost:9000}
+      SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-}
+      SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:5173}
+      PRODUCTOS_URL: http://ms-productos:8081
+
+  front-end:
+    build:
+      context: ./front-end
+      args:
+        # Vite incrusta estas variables en el bundle durante el build
+        VITE_ENTRA_CLIENT_ID: ${VITE_ENTRA_CLIENT_ID:-}
+        VITE_ENTRA_TENANT_ID: ${VITE_ENTRA_TENANT_ID:-}
+        VITE_REDIRECT_URI: ${VITE_REDIRECT_URI:-}
+        VITE_ENTRA_SCOPE_API: ${VITE_ENTRA_SCOPE_API:-}
+        VITE_API_PRODUCTOS: ${VITE_API_PRODUCTOS:-http://localhost:8081}
+        VITE_API_PEDIDOS: ${VITE_API_PEDIDOS:-http://localhost:8082}
+        VITE_API_AUTH: ${VITE_API_AUTH:-http://localhost:9000}
+    image: exp1/front-end:3.0.0
+    container_name: front-end
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - ms-auth
+      - ms-productos
+      - ms-pedidos
+
+volumes:
+  llaves_auth:

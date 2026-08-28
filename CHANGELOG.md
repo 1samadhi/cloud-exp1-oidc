@@ -2,6 +2,21 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [3.0.0]
+
+Cambio mayor: la solucion deja de ser solo backend y suma frontend.
+
+- Frontend **React + Vite** con **MSAL** (`@azure/msal-browser`, `@azure/msal-react`).
+- Login dual: boton de Microsoft (Entra ID) y formulario contra el IdP propio,
+  para evidenciar en pantalla que el mismo Resource Server acepta ambos emisores.
+- Panel que muestra el token vigente, su emisor y sus claims decodificados.
+- Panel para consumir la API protegida y ver los codigos de respuesta.
+- Ningun identificador de Azure queda hardcodeado: todo sale de variables `VITE_*`.
+  La app arranca y avisa si Entra ID no esta configurado, en vez de romperse.
+- `Dockerfile` multistage con nginx y `base: './'` en Vite, necesario para servir
+  la app detras del stage del API Gateway sin romper las rutas de los assets.
+- `docker-compose.yml` levanta el stack completo, con volumen para la llave del IdP.
+
 ## [2.4.0]
 
 - CORS configurable en ambos Resource Server (`seguridad.origenes-cors`). Sin
