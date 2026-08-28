@@ -18,9 +18,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoders;
+import org.springframework.security.oauth2.jwt.JwtClaimNames;
+import org.springframework.security.oauth2.jwt.JwtClaimValidator;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
@@ -43,13 +47,17 @@ import jakarta.servlet.http.HttpServletRequest;
 public class SecurityConfig {
 
     private final List<String> emisoresConfiables;
+    private final List<String> audienciasAceptadas;
     private final Map<String, AuthenticationManager> gestores = new ConcurrentHashMap<>();
 
-    public SecurityConfig(@Value("${seguridad.emisores}") List<String> emisoresConfiables) {
-        this.emisoresConfiables = emisoresConfiables.stream()
-                .map(String::trim)
-                .filter(e -> !e.isEmpty())
-                .toList();
+    public SecurityConfig(@Value("${seguridad.emisores}") List<String> emisoresConfiables,
+            @Value("${seguridad.audiencias:}") List<String> audienciasAceptadas) {
+        this.emisoresConfiables = limpiar(emisoresConfiables);
+        this.audienciasAceptadas = limpiar(audienciasAceptadas);
+    }
+
+    private static List<String> limpiar(List<String> valores) {
+        return valores.stream().map(String::trim).filter(v -> !v.isEmpty()).toList();
     }
 
     @Bean
@@ -80,10 +88,27 @@ public class SecurityConfig {
 
     private AuthenticationManager crearGestor(String emisor) {
         // Descubre el jwks_uri leyendo /.well-known/openid-configuration del emisor
-        JwtDecoder decodificador = JwtDecoders.fromIssuerLocation(emisor);
+        NimbusJwtDecoder decodificador = NimbusJwtDecoder.withIssuerLocation(emisor).build();
+        decodificador.setJwtValidator(validadoresPara(emisor));
         JwtAuthenticationProvider proveedor = new JwtAuthenticationProvider(decodificador);
         proveedor.setJwtAuthenticationConverter(convertidorDeAutoridades());
         return proveedor::authenticate;
+    }
+
+    /**
+     * Valida firma, expiracion y emisor. La comprobacion de audiencia es opcional
+     * y solo se activa si se configura {@code seguridad.audiencias}: los tokens
+     * de Cognito emitidos por client_credentials no traen claim {@code aud}, asi
+     * que exigirla romperia el flujo maquina a maquina.
+     */
+    private OAuth2TokenValidator<Jwt> validadoresPara(String emisor) {
+        List<OAuth2TokenValidator<Jwt>> validadores = new ArrayList<>();
+        validadores.add(JwtValidators.createDefaultWithIssuer(emisor));
+        if (!audienciasAceptadas.isEmpty()) {
+            validadores.add(new JwtClaimValidator<List<String>>(JwtClaimNames.AUD,
+                    aud -> aud != null && aud.stream().anyMatch(audienciasAceptadas::contains)));
+        }
+        return new DelegatingOAuth2TokenValidator<>(validadores);
     }
 
     /**

@@ -2,6 +2,18 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [2.3.0]
+
+- Se incorpora **Microsoft Entra ID** como tercer emisor confiable. El
+  convertidor ya contemplaba su claim `scp` y sus `roles`.
+- Validacion de **audiencia** configurable via `seguridad.audiencias`. Queda
+  desactivada por defecto porque los tokens `client_credentials` de Cognito no
+  llevan claim `aud` y exigirla romperia el flujo maquina a maquina.
+- Los decodificadores se construyen con `NimbusJwtDecoder.withIssuerLocation`
+  para poder encadenar validadores propios sobre los de firma, expiracion y emisor.
+- `docs/02-entra-id.md` con la configuracion del portal y la tabla de diferencias
+  entre los tres emisores.
+
 ## [2.2.0]
 
 - Se incorpora **Amazon Cognito** como segundo emisor confiable (Identity as a

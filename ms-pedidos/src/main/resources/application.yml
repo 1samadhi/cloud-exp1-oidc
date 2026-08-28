@@ -7,6 +7,8 @@ spring:
 
 seguridad:
   emisores: ${SEGURIDAD_EMISORES:http://localhost:9000}
+  # Vacio desactiva la validacion de audiencia. Ver docs/02-entra-id.md.
+  audiencias: ${SEGURIDAD_AUDIENCIAS:}
 
 servicios:
   productos-url: ${PRODUCTOS_URL:http://localhost:8081}

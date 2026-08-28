@@ -9,3 +9,5 @@ seguridad:
   # Emisores cuyos tokens acepta este Resource Server. Se agregan Cognito y
   # Entra ID separandolos por coma, sin tocar el codigo.
   emisores: ${SEGURIDAD_EMISORES:http://localhost:9000}
+  # Vacio desactiva la validacion de audiencia. Ver docs/02-entra-id.md.
+  audiencias: ${SEGURIDAD_AUDIENCIAS:}
