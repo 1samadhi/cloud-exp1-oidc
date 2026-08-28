@@ -1,0 +1,24 @@
+services:
+  ms-auth:
+    build: ./ms-auth
+    image: exp1/ms-auth:1.0.0
+    container_name: ms-auth
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+
+  ms-productos:
+    build: ./ms-productos
+    image: exp1/ms-productos:1.0.0
+    container_name: ms-productos
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+
+  ms-pedidos:
+    build: ./ms-pedidos
+    image: exp1/ms-pedidos:1.0.0
+    container_name: ms-pedidos
+    restart: unless-stopped
+    ports:
+      - "8082:8082"

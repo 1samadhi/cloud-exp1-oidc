@@ -1,0 +1,17 @@
+target/
+*.jar
+*.class
+
+node_modules/
+dist/
+.vite/
+
+.env
+.env.local
+llaves/
+*.pem
+
+.idea/
+.vscode/
+*.iml
+.DS_Store
