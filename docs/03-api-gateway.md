@@ -20,17 +20,17 @@ la EC2.
 | GET    | `/.well-known/jwks.json`              | ms-auth :9000      | No          |
 | POST   | `/auth/login`                         | ms-auth :9000      | No          |
 | GET    | `/auth/userinfo`                      | ms-auth :9000      | Si          |
-| GET    | `/api/v1/public`                      | ms-productos :8081 | No          |
-| GET    | `/api/v1/productos`                   | ms-productos :8081 | Si          |
-| GET    | `/api/v1/productos/quien-soy`         | ms-productos :8081 | Si          |
-| GET    | `/api/v1/productos/{id}`              | ms-productos :8081 | Si          |
-| GET    | `/api/v1/pedidos`                     | ms-pedidos :8082   | Si          |
-| POST   | `/api/v1/pedidos`                     | ms-pedidos :8082   | Si          |
+| GET    | `/v1/public`                      | ms-productos :8081 | No          |
+| GET    | `/v1/productos`                   | ms-productos :8081 | Si          |
+| GET    | `/v1/productos/quien-soy`         | ms-productos :8081 | Si          |
+| GET    | `/v1/productos/{id}`              | ms-productos :8081 | Si          |
+| GET    | `/v1/pedidos`                     | ms-pedidos :8082   | Si          |
+| POST   | `/v1/pedidos`                     | ms-pedidos :8082   | Si          |
 | GET    | `/`                                   | front-end :80      | No          |
 | ANY    | `/{proxy+}`                           | front-end :80      | No          |
 
 La ruta comodin `/{proxy+}` sirve los assets del SPA. Las rutas literales tienen
-prioridad sobre ella, asi que `/api/v1/productos` sigue llegando a su servicio.
+prioridad sobre ella, asi que `/v1/productos` sigue llegando a su servicio.
 
 ## El autorizador JWT
 
@@ -86,3 +86,25 @@ cobra por hora y a lo largo del semestre sale mas cara que ejecutar:
 ```
 
 El stage tiene auto-deploy, asi que los cambios quedan activos de inmediato.
+
+## Rutas limpias y versionadas
+
+La ruta que se publica no es la misma que expone el microservicio:
+
+| Ruta publica (API Gateway) | Destino interno (EC2)                  |
+|----------------------------|----------------------------------------|
+| `GET /v1/productos`        | `http://IP:8081/api/v1/productos`      |
+| `GET /v1/productos/{id}`   | `http://IP:8081/api/v1/productos/{id}` |
+| `GET /v1/productos/quien-soy` | `http://IP:8081/api/v1/productos/quien-soy` |
+| `GET /v1/public`           | `http://IP:8081/api/v1/public`         |
+| `GET /v1/pedidos`          | `http://IP:8082/api/v1/pedidos`        |
+| `POST /v1/pedidos`         | `http://IP:8082/api/v1/pedidos`        |
+
+Separar ambas cosas es justamente lo que aporta un API Manager. La version vive
+en la ruta publica, de modo que publicar una `v2` es apuntar `GET /v2/productos`
+a otra integracion sin que los clientes de `v1` se enteren, y sin que los
+microservicios tengan que coordinar sus rutas internas entre si.
+
+Al elegir la ruta, API Gateway prefiere los segmentos literales sobre las
+variables: `/v1/productos/quien-soy` gana sobre `/v1/productos/{id}`, asi que
+"quien-soy" no se interpreta como un identificador.

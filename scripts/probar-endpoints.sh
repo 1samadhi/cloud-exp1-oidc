@@ -18,9 +18,13 @@ if [[ -n "$BASE" && "$BASE" == http://localhost* ]]; then
   AUTH="http://localhost:9000"
   PROD="http://localhost:8081"
   PED="http://localhost:8082"
+  # Llamando directo al servicio hay que usar su path real
+  PREFIJO="/api/v1"
 else
   BASE=${BASE:-${EXP1_URL:?Define EXP1_URL con la URL del stage o pasala como argumento}}
   AUTH="$BASE"; PROD="$BASE"; PED="$BASE"
+  # El gateway expone rutas limpias y traduce al path interno del microservicio
+  PREFIJO="/v1"
 fi
 
 ok=0; fallos=0
@@ -39,14 +43,14 @@ probar() {
 }
 
 echo "=== 1. Rutas publicas (no exigen token) ==="
-probar 200 "GET  /api/v1/public"                     "$PROD/api/v1/public"
+probar 200 "GET  ${PREFIJO}/public"                     "$PROD${PREFIJO}/public"
 probar 200 "GET  /.well-known/openid-configuration"  "$AUTH/.well-known/openid-configuration"
 probar 200 "GET  /.well-known/jwks.json"             "$AUTH/.well-known/jwks.json"
 
 echo
 echo "=== 2. Rutas protegidas SIN token (deben rechazar) ==="
-probar 401 "GET  /api/v1/productos"                  "$PROD/api/v1/productos"
-probar 401 "GET  /api/v1/pedidos"                    "$PED/api/v1/pedidos"
+probar 401 "GET  ${PREFIJO}/productos"                  "$PROD${PREFIJO}/productos"
+probar 401 "GET  ${PREFIJO}/pedidos"                    "$PED${PREFIJO}/pedidos"
 probar 401 "GET  /auth/userinfo"                     "$AUTH/auth/userinfo"
 
 echo
@@ -71,21 +75,21 @@ AUTORIZACION=(-H "Authorization: Bearer $TOKEN")
 echo
 echo "=== 4. Rutas protegidas CON token ==="
 probar 200 "GET  /auth/userinfo"                     "$AUTH/auth/userinfo" "${AUTORIZACION[@]}"
-probar 200 "GET  /api/v1/productos"                  "$PROD/api/v1/productos" "${AUTORIZACION[@]}"
-probar 200 "GET  /api/v1/productos/1"                "$PROD/api/v1/productos/1" "${AUTORIZACION[@]}"
-probar 404 "GET  /api/v1/productos/999 (no existe)"  "$PROD/api/v1/productos/999" "${AUTORIZACION[@]}"
-probar 200 "GET  /api/v1/productos/quien-soy"        "$PROD/api/v1/productos/quien-soy" "${AUTORIZACION[@]}"
-probar 201 "POST /api/v1/pedidos"                    -X POST "$PED/api/v1/pedidos" \
+probar 200 "GET  ${PREFIJO}/productos"                  "$PROD${PREFIJO}/productos" "${AUTORIZACION[@]}"
+probar 200 "GET  ${PREFIJO}/productos/1"                "$PROD${PREFIJO}/productos/1" "${AUTORIZACION[@]}"
+probar 404 "GET  ${PREFIJO}/productos/999 (no existe)"  "$PROD${PREFIJO}/productos/999" "${AUTORIZACION[@]}"
+probar 200 "GET  ${PREFIJO}/productos/quien-soy"        "$PROD${PREFIJO}/productos/quien-soy" "${AUTORIZACION[@]}"
+probar 201 "POST ${PREFIJO}/pedidos"                    -X POST "$PED${PREFIJO}/pedidos" \
   "${AUTORIZACION[@]}" -H 'Content-Type: application/json' -d '{"productoId":1,"cantidad":2}'
-probar 400 "POST /api/v1/pedidos con producto inexistente" -X POST "$PED/api/v1/pedidos" \
+probar 400 "POST ${PREFIJO}/pedidos con producto inexistente" -X POST "$PED${PREFIJO}/pedidos" \
   "${AUTORIZACION[@]}" -H 'Content-Type: application/json' -d '{"productoId":999,"cantidad":1}'
-probar 400 "POST /api/v1/pedidos con cantidad cero"  -X POST "$PED/api/v1/pedidos" \
+probar 400 "POST ${PREFIJO}/pedidos con cantidad cero"  -X POST "$PED${PREFIJO}/pedidos" \
   "${AUTORIZACION[@]}" -H 'Content-Type: application/json' -d '{"productoId":1,"cantidad":0}'
-probar 200 "GET  /api/v1/pedidos"                    "$PED/api/v1/pedidos" "${AUTORIZACION[@]}"
+probar 200 "GET  ${PREFIJO}/pedidos"                    "$PED${PREFIJO}/pedidos" "${AUTORIZACION[@]}"
 
 echo
 echo "=== 5. Token invalido ==="
-probar 401 "GET  /api/v1/productos con token basura" "$PROD/api/v1/productos" \
+probar 401 "GET  ${PREFIJO}/productos con token basura" "$PROD${PREFIJO}/productos" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vZmFsc28ifQ.x"
 
 echo

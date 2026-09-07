@@ -23,19 +23,19 @@ export function PanelApi({ token }) {
     <section className="tarjeta">
       <h3>Consumir la API protegida</h3>
       <div className="botonera">
-        <button onClick={() => ejecutar('GET /api/v1/public (sin token)', () => productosApi.publico())}>
+        <button onClick={() => ejecutar('GET /v1/public (sin token)', () => productosApi.publico())}>
           Endpoint publico
         </button>
-        <button disabled={!token} onClick={() => ejecutar('GET /api/v1/productos', () => productosApi.listar(token))}>
+        <button disabled={!token} onClick={() => ejecutar('GET /v1/productos', () => productosApi.listar(token))}>
           Listar productos
         </button>
-        <button disabled={!token} onClick={() => ejecutar('GET /api/v1/productos/quien-soy', () => productosApi.quienSoy(token))}>
+        <button disabled={!token} onClick={() => ejecutar('GET /v1/productos/quien-soy', () => productosApi.quienSoy(token))}>
           Quien soy
         </button>
-        <button disabled={!token} onClick={() => ejecutar('POST /api/v1/pedidos', () => pedidosApi.crear(token, 1, 2))}>
+        <button disabled={!token} onClick={() => ejecutar('POST /v1/pedidos', () => pedidosApi.crear(token, 1, 2))}>
           Crear pedido
         </button>
-        <button disabled={!token} onClick={() => ejecutar('GET /api/v1/pedidos', () => pedidosApi.listar(token))}>
+        <button disabled={!token} onClick={() => ejecutar('GET /v1/pedidos', () => pedidosApi.listar(token))}>
           Mis pedidos
         </button>
       </div>

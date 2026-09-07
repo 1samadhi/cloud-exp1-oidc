@@ -310,12 +310,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/public",
+              "raw": "{{baseUrl}}/v1/public",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "public"
               ]
@@ -344,12 +343,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/productos",
+              "raw": "{{baseUrl}}/v1/productos",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "productos"
               ]
@@ -378,12 +376,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/productos",
+              "raw": "{{baseUrl}}/v1/productos",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "productos"
               ]
@@ -418,12 +415,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/productos/1",
+              "raw": "{{baseUrl}}/v1/productos/1",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "productos",
                 "1"
@@ -459,12 +455,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/productos/999",
+              "raw": "{{baseUrl}}/v1/productos/999",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "productos",
                 "999"
@@ -500,12 +495,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/productos/quien-soy",
+              "raw": "{{baseUrl}}/v1/productos/quien-soy",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "productos",
                 "quien-soy"
@@ -551,12 +545,11 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "raw": "{{baseUrl}}/v1/pedidos",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "pedidos"
               ]
@@ -600,12 +593,11 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "raw": "{{baseUrl}}/v1/pedidos",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "pedidos"
               ]
@@ -649,12 +641,11 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "raw": "{{baseUrl}}/v1/pedidos",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "pedidos"
               ]
@@ -693,12 +684,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "raw": "{{baseUrl}}/v1/pedidos",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
                 "v1",
                 "pedidos"
               ]

@@ -2,6 +2,11 @@ const urlProductos = import.meta.env.VITE_API_PRODUCTOS ?? 'http://localhost:808
 const urlPedidos = import.meta.env.VITE_API_PEDIDOS ?? 'http://localhost:8082'
 const urlAuth = import.meta.env.VITE_API_AUTH ?? 'http://localhost:9000'
 
+// El API Gateway expone rutas limpias y versionadas (/v1/productos) y traduce
+// al path interno del microservicio (/api/v1/productos). Llamando directo a un
+// servicio, en cambio, hay que usar su path real.
+const prefijo = import.meta.env.VITE_API_PREFIJO ?? '/v1'
+
 async function pedir(url, token, opciones = {}) {
   const respuesta = await fetch(url, {
     ...opciones,
@@ -37,15 +42,15 @@ export const authApi = {
 }
 
 export const productosApi = {
-  publico: () => pedir(`${urlProductos}/api/v1/public`, null),
-  listar: (token) => pedir(`${urlProductos}/api/v1/productos`, token),
-  quienSoy: (token) => pedir(`${urlProductos}/api/v1/productos/quien-soy`, token)
+  publico: () => pedir(`${urlProductos}${prefijo}/public`, null),
+  listar: (token) => pedir(`${urlProductos}${prefijo}/productos`, token),
+  quienSoy: (token) => pedir(`${urlProductos}${prefijo}/productos/quien-soy`, token)
 }
 
 export const pedidosApi = {
-  listar: (token) => pedir(`${urlPedidos}/api/v1/pedidos`, token),
+  listar: (token) => pedir(`${urlPedidos}${prefijo}/pedidos`, token),
   crear: (token, productoId, cantidad) =>
-    pedir(`${urlPedidos}/api/v1/pedidos`, token, {
+    pedir(`${urlPedidos}${prefijo}/pedidos`, token, {
       method: 'POST',
       body: JSON.stringify({ productoId, cantidad })
     })

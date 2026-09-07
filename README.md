@@ -83,7 +83,7 @@ Agregar o quitar un emisor es cambiar `SEGURIDAD_EMISORES`, sin recompilar.
 | GET    | `/auth/userinfo`                        | Si   | Claims del token presentado          |
 | GET    | `/.well-known/openid-configuration`     | No   | Metadatos OIDC del emisor            |
 | GET    | `/.well-known/jwks.json`                | No   | Llaves publicas para validar la firma|
-| GET    | `/api/v1/estado`                        | No   | Estado y version del servicio        |
+| GET    | `/v1/estado`                        | No   | Estado y version del servicio        |
 
 Usuarios de prueba:
 
@@ -111,17 +111,17 @@ llave publica.
 ### ms-productos
 | Metodo | Ruta                  | Descripcion               |
 |--------|-----------------------|---------------------------|
-| GET    | `/api/v1/productos`      | Lista el catalogo         |
-| GET    | `/api/v1/productos/{id}` | Consulta un producto      |
+| GET    | `/v1/productos`      | Lista el catalogo         |
+| GET    | `/v1/productos/{id}` | Consulta un producto      |
 
 ### ms-pedidos — Resource Server
 | Metodo | Ruta                | Auth | Descripcion                                        |
 |--------|---------------------|------|----------------------------------------------------|
-| GET    | `/api/v1/public`    | No   | Comprobacion de despliegue                         |
-| GET    | `/api/v1/pedidos`   | Si   | Pedidos del usuario del token                      |
-| POST   | `/api/v1/pedidos`   | Si   | Crea un pedido — requiere scope `pedidos.escribir` |
+| GET    | `/v1/public`    | No   | Comprobacion de despliegue                         |
+| GET    | `/v1/pedidos`   | Si   | Pedidos del usuario del token                      |
+| POST   | `/v1/pedidos`   | Si   | Crea un pedido — requiere scope `pedidos.escribir` |
 
-`POST /api/v1/pedidos` valida el producto llamando a `ms-productos` y reenviando
+`POST /v1/pedidos` valida el producto llamando a `ms-productos` y reenviando
 el mismo token del usuario, de modo que la identidad viaja entre servicios en
 lugar de confiar ciegamente en el llamador interno.
 
@@ -200,9 +200,9 @@ docker compose up --build -d
 Verificar:
 
 ```bash
-curl http://localhost:9000/api/v1/estado
-curl http://localhost:8081/api/v1/productos
-curl http://localhost:8082/api/v1/pedidos
+curl http://localhost:9000/v1/estado
+curl http://localhost:8081/v1/productos
+curl http://localhost:8082/v1/pedidos
 ```
 
 Detener:
