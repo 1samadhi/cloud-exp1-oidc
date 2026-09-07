@@ -1,0 +1,43 @@
+# Sobrecarga para desarrollo local: agrega una base de datos en contenedor.
+# En AWS no se usa, porque ahi la base es el RDS y la instancia no tiene RAM
+# de sobra para un motor MySQL junto a las tres JVM.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up --build -d
+#
+services:
+  # Base de datos local para desarrollo. En AWS este servicio no se levanta:
+  # DB_HOST apunta al endpoint del RDS y el resto de la configuracion es igual.
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_NOMBRE:-pedidos360}
+      MYSQL_USER: ${DB_USUARIO:-pedidos360}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-cambiar}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-cambiar}
+    volumes:
+      - datos_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 10
+
+  ms-productos:
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+
+  ms-pedidos:
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+
+volumes:
+  datos_mysql:

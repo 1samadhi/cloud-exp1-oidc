@@ -1,28 +1,12 @@
-# Stack completo. Las variables salen de .env (ver .env.example).
+# Stack de la aplicacion. Las variables salen de .env (ver .env.example).
 #
+# En AWS, contra el RDS:
 #   docker compose --env-file .env up --build -d
 #
+# En local, agregando una base de datos en contenedor:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up --build -d
+#
 services:
-  # Base de datos local para desarrollo. En AWS este servicio no se levanta:
-  # DB_HOST apunta al endpoint del RDS y el resto de la configuracion es igual.
-  mysql:
-    image: mysql:8
-    container_name: mysql
-    restart: unless-stopped
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_DATABASE: ${DB_NOMBRE:-pedidos360}
-      MYSQL_USER: ${DB_USUARIO:-pedidos360}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-cambiar}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-cambiar}
-    volumes:
-      - datos_mysql:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      retries: 10
-
   ms-auth:
     build: ./ms-auth
     image: exp1/ms-auth:3.0.0
@@ -46,9 +30,6 @@ services:
     restart: unless-stopped
     ports:
       - "8081:8081"
-    depends_on:
-      mysql:
-        condition: service_healthy
     environment:
       DB_HOST: ${DB_HOST:-mysql}
       DB_PUERTO: ${DB_PUERTO:-3306}
@@ -67,10 +48,7 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      ms-productos:
-        condition: service_started
-      mysql:
-        condition: service_healthy
+      - ms-productos
     environment:
       DB_HOST: ${DB_HOST:-mysql}
       DB_PUERTO: ${DB_PUERTO:-3306}
@@ -106,4 +84,3 @@ services:
 
 volumes:
   llaves_auth:
-  datos_mysql:
