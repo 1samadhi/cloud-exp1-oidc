@@ -137,6 +137,45 @@ lugar de confiar ciegamente en el llamador interno.
 | `SEGURIDAD_ORIGENES_CORS` | productos, pedidos | Origenes del frontend permitidos             |
 | `PRODUCTOS_URL`       | ms-pedidos          | URL base de ms-productos                        |
 
+## Probar los endpoints
+
+### Script de humo
+
+Ejecuta las 18 comprobaciones y verifica el codigo HTTP de cada una:
+
+```bash
+./scripts/probar-endpoints.sh https://TU-API.execute-api.us-east-1.amazonaws.com/desarrollo
+./scripts/probar-endpoints.sh http://localhost      # contra el stack local
+```
+
+### Thunder Client
+
+1. Menu **Collections** → `...` → **Import** → `thunder-client/thunder-collection_EXP1.json`
+2. Pestania **Env** → `...` → **Import** → `thunder-client/thunder-environment_EXP1.json`
+3. **Activar el entorno EXP1** (marcarlo con el check). Sin entorno activo la
+   peticion de login no puede guardar el token y todo lo demas da 401.
+4. Ejecutar **1. Login IdP propio**. Su test `set-env-var` guarda el
+   `access_token` en `{{token}}` y el resto de las peticiones lo toma solo.
+
+Cada peticion trae aserciones sobre el codigo HTTP, asi que la barra de tests
+queda en verde y sirve directamente como evidencia.
+
+Para la carpeta de Cognito hay que rellenar antes `cognitoClientId` y
+`cognitoClientSecret` en el entorno.
+
+La carpeta **5. Multi emisor** llama directo a la EC2 saltandose el gateway: es
+donde se ve que el mismo Resource Server acepta tokens de dos emisores distintos.
+
+### Postman
+
+Importar `postman/EXP1.postman_collection.json`. Mismo criterio: ejecutar primero
+**1. Login IdP propio**, que guarda el token en la variable de coleccion.
+
+### Navegador
+
+Abrir la URL del stage. El frontend permite iniciar sesion, ver el token con sus
+claims decodificados y llamar a cada endpoint mostrando la respuesta.
+
 ## Documentacion
 
 | Documento                     | Contenido                                     |
@@ -145,6 +184,9 @@ lugar de confiar ciegamente en el llamador interno.
 | `docs/02-entra-id.md`         | Registro en Azure, exponer la API y MSAL      |
 | `docs/03-api-gateway.md`      | Rutas, autorizador JWT y la IP cambiante      |
 | `docs/04-despliegue-ec2.md`   | La instancia, SSM y el control de costos      |
+| `thunder-client/`             | Coleccion y entorno de Thunder Client         |
+| `postman/`                    | Coleccion de Postman con 16 peticiones        |
+| `scripts/`                    | Despliegue, pruebas y correccion de la IP      |
 
 ## Como ejecutar
 

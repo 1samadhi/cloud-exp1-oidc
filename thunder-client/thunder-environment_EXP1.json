@@ -1,0 +1,46 @@
+{
+  "_id": "2fb0296a-b0fa-44b9-9702-76cfc6d618f0",
+  "client": "Thunder Client",
+  "environmentName": "EXP1",
+  "dateExported": "2026-08-28T15:56:31.956967+00:00",
+  "version": "1.2",
+  "default": true,
+  "data": [
+    {
+      "name": "baseUrl",
+      "value": "https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo"
+    },
+    {
+      "name": "urlProductos",
+      "value": "http://54.164.174.179:8081"
+    },
+    {
+      "name": "urlPedidos",
+      "value": "http://54.164.174.179:8082"
+    },
+    {
+      "name": "urlAuth",
+      "value": "http://54.164.174.179:9000"
+    },
+    {
+      "name": "token",
+      "value": ""
+    },
+    {
+      "name": "tokenCognito",
+      "value": ""
+    },
+    {
+      "name": "cognitoDominio",
+      "value": "exp1-oidc-u4gmyfk"
+    },
+    {
+      "name": "cognitoClientId",
+      "value": ""
+    },
+    {
+      "name": "cognitoClientSecret",
+      "value": ""
+    }
+  ]
+}
