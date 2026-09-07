@@ -5,6 +5,24 @@ spring:
   application:
     name: ms-productos
 
+  # Propiedades de conexion a la base de datos cloud (RDS MySQL).
+  # En AWS apuntan al endpoint del RDS; en local, al contenedor mysql del compose.
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PUERTO:3306}/${DB_NOMBRE:pedidos360}?useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USUARIO:pedidos360}
+    password: ${DB_PASSWORD:cambiar}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      # Hibernate crea y actualiza las tablas al arrancar. Suficiente para la
+      # experiencia; en produccion se usaria una herramienta de migraciones.
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+
 seguridad:
   # Emisores cuyos tokens acepta este Resource Server. Se agregan Cognito y
   # Entra ID separandolos por coma, sin tocar el codigo.

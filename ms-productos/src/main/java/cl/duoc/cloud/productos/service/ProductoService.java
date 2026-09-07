@@ -6,25 +6,27 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import cl.duoc.cloud.productos.model.Producto;
+import cl.duoc.cloud.productos.repository.ProductoRepository;
 
 /**
- * Catalogo en memoria. La actividad permite simular el almacen de datos, asi que
- * no se levanta una base de datos: el foco de la experiencia es OIDC y el API Manager.
+ * Catalogo persistido en la base de datos cloud. Antes era una lista en memoria:
+ * al reiniciar el contenedor se perdia el estado y cada replica veia datos
+ * distintos.
  */
 @Service
 public class ProductoService {
 
-    private final List<Producto> catalogo = List.of(
-            new Producto(1L, "Teclado mecanico", 45990),
-            new Producto(2L, "Mouse inalambrico", 19990),
-            new Producto(3L, "Monitor 27 pulgadas", 189990),
-            new Producto(4L, "Audifonos con cancelacion de ruido", 89990));
+    private final ProductoRepository repositorio;
+
+    public ProductoService(ProductoRepository repositorio) {
+        this.repositorio = repositorio;
+    }
 
     public List<Producto> listar() {
-        return catalogo;
+        return repositorio.findAll();
     }
 
     public Optional<Producto> buscarPorId(Long id) {
-        return catalogo.stream().filter(p -> p.id().equals(id)).findFirst();
+        return repositorio.findById(id);
     }
 }
