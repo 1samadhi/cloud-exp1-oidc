@@ -7,38 +7,24 @@
   "folders": [
     {
       "_id": "fbc613a3-925f-4e72-92d6-34018f95836a",
-      "name": "1. Entra ID (Identity as a Service)",
+      "name": "1. Entra ID y registro de usuarios",
       "containerId": "",
       "created": "2026-08-28T15:56:31.956967+00:00",
       "sortNum": 10000
     },
     {
-      "_id": "ffb91d1c-9484-47db-887e-d7093a3be236",
-      "name": "2. Emisor no aceptado por el gateway",
-      "containerId": "",
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "sortNum": 20000
-    },
-    {
       "_id": "da02c699-09ac-470f-89de-2b7b678b3aa1",
-      "name": "3. Productos (Resource Server)",
+      "name": "2. Productos (Resource Server)",
       "containerId": "",
       "created": "2026-08-28T15:56:31.956967+00:00",
       "sortNum": 30000
     },
     {
       "_id": "eb604ade-2649-440f-87be-b0c3cad76a72",
-      "name": "4. Pedidos (Resource Server)",
+      "name": "3. Pedidos (Resource Server)",
       "containerId": "",
       "created": "2026-08-28T15:56:31.956967+00:00",
       "sortNum": 40000
-    },
-    {
-      "_id": "083def5b-4a8a-4bbd-971e-9996b67fa024",
-      "name": "5. Multi emisor (directo a la EC2, sin gateway)",
-      "containerId": "",
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "sortNum": 50000
     }
   ],
   "requests": [
@@ -103,239 +89,6 @@
           "value": "token"
         }
       ]
-    },
-    {
-      "_id": "7b1e451c-2fc9-42ef-9bde-71fa012b986e",
-      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
-      "containerId": "fbc613a3-925f-4e72-92d6-34018f95836a",
-      "name": "1. Login IdP propio",
-      "url": "{{baseUrl}}/auth/login",
-      "method": "POST",
-      "sortNum": 10000,
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "modified": "2026-08-28T15:56:31.956967+00:00",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "params": [],
-      "tests": [
-        {
-          "type": "res-code",
-          "custom": "",
-          "action": "equal",
-          "value": "200"
-        },
-        {
-          "type": "set-env-var",
-          "custom": "json.access_token",
-          "action": "setto",
-          "value": "token"
-        },
-        {
-          "type": "json-query",
-          "custom": "json.token_type",
-          "action": "equal",
-          "value": "Bearer"
-        }
-      ],
-      "docs": "Emite access_token e id_token firmados en RS256.\n\nEl test 'set-env-var' guarda el access_token en la variable de entorno {{token}}, asi que el resto de las peticiones lo toman solas. Requiere tener seleccionado el entorno EXP1.",
-      "body": {
-        "type": "json",
-        "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}",
-        "form": []
-      }
-    },
-    {
-      "_id": "7c249cf5-254b-45ff-b398-36db6989ac72",
-      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
-      "containerId": "fbc613a3-925f-4e72-92d6-34018f95836a",
-      "name": "2. Login con credenciales invalidas (401)",
-      "url": "{{baseUrl}}/auth/login",
-      "method": "POST",
-      "sortNum": 20000,
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "modified": "2026-08-28T15:56:31.956967+00:00",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "params": [],
-      "tests": [
-        {
-          "type": "res-code",
-          "custom": "",
-          "action": "equal",
-          "value": "401"
-        }
-      ],
-      "docs": "Evidencia del rechazo de credenciales.",
-      "body": {
-        "type": "json",
-        "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"incorrecta\"\n}",
-        "form": []
-      }
-    },
-    {
-      "_id": "77ac6bad-813f-48e9-a41d-252f2b1b91a5",
-      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
-      "containerId": "fbc613a3-925f-4e72-92d6-34018f95836a",
-      "name": "3. Userinfo (protegido)",
-      "url": "{{baseUrl}}/auth/userinfo",
-      "method": "GET",
-      "sortNum": 30000,
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "modified": "2026-08-28T15:56:31.956967+00:00",
-      "headers": [],
-      "params": [],
-      "tests": [
-        {
-          "type": "res-code",
-          "custom": "",
-          "action": "equal",
-          "value": "200"
-        }
-      ],
-      "docs": "Devuelve los claims del token presentado.",
-      "auth": {
-        "type": "bearer",
-        "bearer": "{{token}}"
-      }
-    },
-    {
-      "_id": "902311bf-e889-4e4c-b723-cbb2848218e4",
-      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
-      "containerId": "fbc613a3-925f-4e72-92d6-34018f95836a",
-      "name": "4. Discovery OIDC",
-      "url": "{{baseUrl}}/.well-known/openid-configuration",
-      "method": "GET",
-      "sortNum": 40000,
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "modified": "2026-08-28T15:56:31.956967+00:00",
-      "headers": [],
-      "params": [],
-      "tests": [
-        {
-          "type": "res-code",
-          "custom": "",
-          "action": "equal",
-          "value": "200"
-        },
-        {
-          "type": "json-query",
-          "custom": "json.issuer",
-          "action": "equal",
-          "value": "https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo"
-        }
-      ],
-      "docs": "Metadatos que descarga el autorizador JWT de AWS API Gateway para saber donde estan las llaves publicas."
-    },
-    {
-      "_id": "f59f204d-64f3-4d83-8770-96bda16adda9",
-      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
-      "containerId": "fbc613a3-925f-4e72-92d6-34018f95836a",
-      "name": "5. JWKS (llaves publicas)",
-      "url": "{{baseUrl}}/.well-known/jwks.json",
-      "method": "GET",
-      "sortNum": 50000,
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "modified": "2026-08-28T15:56:31.956967+00:00",
-      "headers": [],
-      "params": [],
-      "tests": [
-        {
-          "type": "res-code",
-          "custom": "",
-          "action": "equal",
-          "value": "200"
-        }
-      ],
-      "docs": "Llaves con las que AWS y los microservicios verifican la firma."
-    },
-    {
-      "_id": "1b5d9182-998a-4810-82e9-c0c3272555a9",
-      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
-      "containerId": "ffb91d1c-9484-47db-887e-d7093a3be236",
-      "name": "1. Token maquina a maquina",
-      "method": "POST",
-      "url": "https://{{cognitoDominio}}.auth.us-east-1.amazoncognito.com/oauth2/token",
-      "sortNum": 10000,
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "modified": "2026-08-28T15:56:31.956967+00:00",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/x-www-form-urlencoded"
-        }
-      ],
-      "params": [],
-      "body": {
-        "type": "formencoded",
-        "raw": "",
-        "form": [
-          {
-            "name": "grant_type",
-            "value": "client_credentials"
-          },
-          {
-            "name": "scope",
-            "value": "exp1-api/productos.leer exp1-api/pedidos.escribir"
-          }
-        ]
-      },
-      "auth": {
-        "type": "basic",
-        "basic": {
-          "username": "{{cognitoClientId}}",
-          "password": "{{cognitoClientSecret}}"
-        }
-      },
-      "tests": [
-        {
-          "type": "res-code",
-          "custom": "",
-          "action": "equal",
-          "value": "200"
-        },
-        {
-          "type": "set-env-var",
-          "custom": "json.access_token",
-          "action": "setto",
-          "value": "tokenCognito"
-        }
-      ],
-      "docs": "Flujo client_credentials. Rellenar cognitoClientId y cognitoClientSecret en el entorno antes de ejecutar.\n\nEl scope viene prefijado con el resource server: 'exp1-api/pedidos.escribir'. Se guarda en {{tokenCognito}}, aparte del token del IdP propio."
-    },
-    {
-      "_id": "3d1bb21b-a58b-4e2a-9eed-9a0e4a7b5b47",
-      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
-      "containerId": "ffb91d1c-9484-47db-887e-d7093a3be236",
-      "name": "2. Productos con token de Cognito por el gateway (401)",
-      "url": "{{baseUrl}}/v1/productos",
-      "method": "GET",
-      "sortNum": 20000,
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "modified": "2026-08-28T15:56:31.956967+00:00",
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Bearer {{tokenCognito}}"
-        }
-      ],
-      "params": [],
-      "tests": [
-        {
-          "type": "res-code",
-          "custom": "",
-          "action": "equal",
-          "value": "401"
-        }
-      ],
-      "docs": "Comportamiento esperado: el autorizador del API Gateway valida un solo emisor (el IdP propio), asi que rechaza el token de Cognito. Ver la carpeta 5 para la prueba que si funciona."
     },
     {
       "_id": "a4655026-d178-4c1f-acbe-12a5eea69de7",
@@ -620,59 +373,6 @@
       }
     },
     {
-      "_id": "1e75a1c9-5578-483d-997b-c097d2c001e1",
-      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
-      "containerId": "083def5b-4a8a-4bbd-971e-9996b67fa024",
-      "name": "1. Productos con token del IdP propio",
-      "url": "{{urlProductos}}/api/v1/productos",
-      "method": "GET",
-      "sortNum": 10000,
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "modified": "2026-08-28T15:56:31.956967+00:00",
-      "headers": [],
-      "params": [],
-      "tests": [
-        {
-          "type": "res-code",
-          "custom": "",
-          "action": "equal",
-          "value": "200"
-        }
-      ],
-      "docs": "Saltandose el API Gateway se ve la validacion multi emisor de Spring.",
-      "auth": {
-        "type": "bearer",
-        "bearer": "{{token}}"
-      }
-    },
-    {
-      "_id": "10c72cc4-023e-4e35-a819-697b911e1d55",
-      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
-      "containerId": "083def5b-4a8a-4bbd-971e-9996b67fa024",
-      "name": "2. Productos con token de Cognito",
-      "url": "{{urlProductos}}/api/v1/productos",
-      "method": "GET",
-      "sortNum": 20000,
-      "created": "2026-08-28T15:56:31.956967+00:00",
-      "modified": "2026-08-28T15:56:31.956967+00:00",
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Bearer {{tokenCognito}}"
-        }
-      ],
-      "params": [],
-      "tests": [
-        {
-          "type": "res-code",
-          "custom": "",
-          "action": "equal",
-          "value": "200"
-        }
-      ],
-      "docs": "La misma ruta acepta un emisor distinto porque el Resource Server resuelve el validador segun el claim 'iss'. Por el gateway esto daria 401."
-    },
-    {
       "_id": "ee83104b-3883-48d1-9614-8fa6abfac5fc",
       "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
       "containerId": "fbc613a3-925f-4e72-92d6-34018f95836a",
@@ -688,7 +388,7 @@
       ],
       "body": {
         "type": "json",
-        "raw": "{\n  \"nombre\": \"Usuario de prueba\",\n  \"usuario\": \"prueba.thunder\",\n  \"password\": \"{{passwordRegistro}}\"\n}",
+        "raw": "{\n  \"nombre\": \"Usuario de prueba\",\n  \"usuario\": \"prueba.{{$timestamp}}\",\n  \"password\": \"{{passwordRegistro}}\"\n}",
         "form": []
       },
       "tests": [
@@ -705,7 +405,7 @@
       },
       "created": "2026-09-08T00:00:00.000Z",
       "modified": "2026-09-08T00:00:00.000Z",
-      "docs": ""
+      "docs": "Crea una cuenta real en el tenant. El alias lleva {{$timestamp}} para que la peticion sea repetible: Entra rechaza con 400 un userPrincipalName que ya existe."
     },
     {
       "_id": "4a6a7273-ff73-47ef-83dd-c38430c53326",

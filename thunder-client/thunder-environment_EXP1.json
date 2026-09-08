@@ -19,36 +19,12 @@
       "value": "http://54.164.174.179:8082"
     },
     {
-      "name": "urlAuth",
-      "value": "http://54.164.174.179:9000"
-    },
-    {
       "name": "token",
-      "value": ""
-    },
-    {
-      "name": "tokenCognito",
-      "value": ""
-    },
-    {
-      "name": "cognitoDominio",
-      "value": "exp1-oidc-u4gmyfk"
-    },
-    {
-      "name": "cognitoClientId",
-      "value": ""
-    },
-    {
-      "name": "cognitoClientSecret",
       "value": ""
     },
     {
       "name": "passwordRegistro",
       "value": ""
-    },
-    {
-      "name": "usuarioRegistro",
-      "value": "prueba.thunder"
     },
     {
       "name": "tenantId",

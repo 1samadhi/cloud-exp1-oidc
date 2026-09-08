@@ -1,8 +1,9 @@
 # EXP1 — Arquitectura segura en la nube con OIDC y OAuth 2.0
 
-Solucion de la Experiencia 1 de Cloud: tres microservicios Spring Boot desacoplados
-de la logica de autenticacion, protegidos con OAuth 2.0 y publicados a Internet
-a traves de AWS API Gateway.
+Sistema **Pedidos360**: arquitectura cloud-native multi nube. La identidad la
+administra **Microsoft Entra ID** y el computo vive en **AWS**, con los
+microservicios publicados a Internet unicamente a traves de un API Gateway que
+valida cada token en el borde.
 
 
 ## Repositorios
@@ -28,133 +29,164 @@ la imagen del frontend en su repositorio y levanta el stack desde este.
 ## Arquitectura
 
 ```
-                    Internet
-                       |
-                       v
-        +--------------------------------+
-        |   AWS API Gateway (HTTP API)    |
-        |   stage: desarrollo — HTTPS     |
-        |                                 |
-        |   Autorizador JWT               |
-        |   issuer = este mismo stage     |
-        +----------------+----------------+
-                         | HTTP
+                    Azure (identidad)
+        +-----------------------------------+
+        |  Microsoft Entra ID               |
+        |  tenant Pedidos360                |
+        |  emite tokens · publica su JWKS   |
+        +----+-------------------------+----+
+             | 1. login PKCE           | 3. AWS descarga
+             |    (desde el navegador) |    las llaves publicas
+             v                         v
+        +-----------------------------------+
+        |  AWS API Gateway (HTTP API)       |
+        |  stage: desarrollo — HTTPS        |
+        |                                   |
+        |  Rutas limpias  /v1/...           |
+        |  CORS por origen declarado        |
+        |  Autorizador JWT — emisor: Entra  |
+        +----------------+------------------+
+                         | HTTP  2. el token viaja
+                         v          en Authorization
+        +-----------------------------------+
+        |  EC2 t3.small — Docker Compose    |
+        |                                   |
+        |  front-angular  :80   nginx       |
+        |  ms-auth        :9000 BFF         |
+        |  ms-productos   :8081 Resource    |
+        |  ms-pedidos     :8082 Resource    |
+        +----------------+------------------+
+                         | 3306 (privado)
                          v
-        +--------------------------------+
-        |   EC2 t3.small — Docker Compose |
-        |                                 |
-        |   front-end     :80   nginx     |
-        |   ms-auth       :9000 IdP OIDC  |
-        |   ms-productos  :8081 Resource  |
-        |   ms-pedidos    :8082 Resource  |
-        +--------------------------------+
-
-Emisores aceptados por los Resource Server:
-  - ms-auth (propio)   RS256, JWKS publicado por el gateway
-  - Amazon Cognito     maquina a maquina
-  - Microsoft Entra ID login de usuarios desde el frontend
+        +-----------------------------------+
+        |  RDS MySQL — sin acceso publico   |
+        +-----------------------------------+
 ```
 
+Las dos nubes no comparten red ni credenciales. El unico puente es el JWKS de
+Azure, una URL publica desde la que AWS obtiene las llaves con que verificar
+firmas.
+
 Solo el API Gateway ofrece HTTPS. Los microservicios no confian en la red: cada
-peticion se autoriza por el token, tanto en el borde como dentro de cada servicio.
+peticion se autoriza por el token, tanto en el borde como dentro de cada
+servicio. Esa duplicacion es deliberada, porque la instancia tiene IP publica y
+se puede alcanzar sin pasar por el gateway.
 
-## Microservicios
+## Componentes
 
-| Servicio       | Puerto | Rol                                                |
-|----------------|--------|----------------------------------------------------|
-| `ms-auth`      | 9000   | Identity Provider propio (OIDC)                    |
-| `ms-productos` | 8081   | Catalogo de productos — Resource Server            |
-| `ms-pedidos`   | 8082   | Gestion de pedidos — Resource Server               |
-| `front-end`    | 80     | SPA React + Vite con MSAL                          |
+| Servicio         | Puerto | Rol                                                  |
+|------------------|--------|------------------------------------------------------|
+| `front-angular`  | 80     | SPA Angular 22 con MSAL — repositorio aparte         |
+| `ms-auth`        | 9000   | BFF: registra usuarios en el tenant via Graph        |
+| `ms-productos`   | 8081   | Catalogo — Resource Server OAuth 2.0                 |
+| `ms-pedidos`     | 8082   | Pedidos — Resource Server OAuth 2.0                  |
+| RDS MySQL        | 3306   | Persistencia, sin acceso desde Internet              |
 
-## Emisores de identidad
+## Identidad
 
-Los Resource Server aceptan tokens de tres emisores a la vez, resueltos por el
-claim `iss` del token entrante:
+El proveedor de identidad del sistema es **Microsoft Entra ID**. Los
+microservicios no guardan contrasenias ni saben autenticar: solo verifican la
+firma de los tokens contra las llaves publicas del emisor.
 
-| Emisor                | Rol en la solucion                                 |
-|-----------------------|----------------------------------------------------|
-| `ms-auth` (propio)    | Identity Provider OIDC construido en el proyecto   |
-| Amazon Cognito        | Identity as a Service, flujo maquina a maquina     |
-| Microsoft Entra ID    | Login de usuarios desde el frontend con MSAL       |
+| Dato        | Valor                                                       |
+|-------------|-------------------------------------------------------------|
+| Tenant      | Pedidos360                                                  |
+| Emisor      | `https://login.microsoftonline.com/<tenant>/v2.0`           |
+| Flujo       | Authorization Code con PKCE, mediante MSAL                  |
+| Scopes      | `productos.leer`, `pedidos.escribir`                        |
+| Roles       | `ADMIN`, `USER`                                             |
 
-Agregar o quitar un emisor es cambiar `SEGURIDAD_EMISORES`, sin recompilar.
+`SecurityConfig` resuelve el validador segun el claim `iss` del token entrante y
+acepta una lista de emisores configurable, de modo que sumar o quitar un
+proveedor no exige recompilar. En produccion esa lista contiene unicamente a
+Entra ID.
+
+### Sobre el Identity Provider propio
+
+El repositorio incluye un IdP OIDC construido durante el desarrollo, visible en
+los commits `V2.0.0` en adelante. Sirvio para levantar y probar toda la cadena
+(rutas, CORS, autorizador, resource servers) antes de que existiera el tenant.
+
+Quedo **retirado** en `V8.1.0`: sus rutas ya no se publican en el gateway, su
+emisor no figura entre los confiables y arranca sin ningun usuario. Mantenerlo
+activo habria dejado un camino de acceso paralelo y mas debil que el que exige
+la solucion.
+
+### Amazon Cognito
+
+Se integro como Identity as a Service en `V2.2.0`, siguiendo el material de la
+asignatura, y esta documentado en `docs/01-cognito.md`. No forma parte de la
+solucion entregada: el enunciado pide que el IDaaS sea Azure.
 
 ## Stack
 
-- Java 21, Spring Boot 4.1.0
-- React 18 + Vite, MSAL para Entra ID
-- Docker (multistage, usuario no root) y Docker Compose
-- AWS EC2 + AWS API Gateway (HTTP API)
+- Java 21, Spring Boot 4.1.0, Spring Security 7
+- Angular 22 con `@azure/msal-angular` 6
+- MySQL 8 sobre Amazon RDS, con JPA e Hibernate
+- Docker multietapa y Docker Compose
+- AWS EC2, API Gateway (HTTP API) y RDS
+- Microsoft Entra ID como IDaaS
 
-## Endpoints disponibles
+## Endpoints
 
-### ms-auth — Identity Provider OIDC
-| Metodo | Ruta                                    | Auth | Descripcion                          |
-|--------|-----------------------------------------|------|--------------------------------------|
-| POST   | `/auth/login`                           | No   | Valida credenciales y emite tokens   |
-| GET    | `/auth/userinfo`                        | Si   | Claims del token presentado          |
-| GET    | `/.well-known/openid-configuration`     | No   | Metadatos OIDC del emisor            |
-| GET    | `/.well-known/jwks.json`                | No   | Llaves publicas para validar la firma|
-| GET    | `/v1/estado`                        | No   | Estado y version del servicio        |
+Rutas publicas del API Gateway. El gateway traduce a la ruta interna del
+microservicio, que conserva su propio prefijo `/api/v1`.
 
-Usuarios de prueba:
+### Publicas
 
-| Usuario   | Contrasenia  | Roles                   |
-|-----------|--------------|-------------------------|
-| `admin`   | `admin123`   | `ROLE_ADMIN`, `ROLE_USER` |
-| `cliente` | `cliente123` | `ROLE_USER`             |
+| Metodo | Ruta               | Descripcion                                    |
+|--------|--------------------|------------------------------------------------|
+| GET    | `/`                | La aplicacion Angular                          |
+| GET    | `/v1/public`       | Comprobacion de despliegue, sin token          |
+| POST   | `/auth/registro`   | Crea una cuenta en el tenant via Graph         |
 
-Obtener un token:
+### Protegidas — exigen un token de Entra ID
 
-```bash
-curl -X POST http://localhost:9000/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"username":"admin","password":"admin123"}'
-```
+| Metodo | Ruta                      | Descripcion                                  |
+|--------|---------------------------|----------------------------------------------|
+| GET    | `/v1/productos`           | Lista el catalogo                            |
+| GET    | `/v1/productos/{id}`      | Consulta un producto                         |
+| GET    | `/v1/productos/quien-soy` | Emisor, sujeto y claims del token presentado |
+| GET    | `/v1/pedidos`             | Pedidos del usuario del token                |
+| POST   | `/v1/pedidos`             | Crea un pedido                               |
 
-#### Por que RS256 y no HS256
+`POST /v1/pedidos` exige el scope `pedidos.escribir` o el rol `ADMIN`, y valida
+el producto llamando a `ms-productos` con el mismo token del usuario: la
+identidad viaja entre servicios en lugar de confiar en el llamador interno.
 
-El autorizador JWT de AWS API Gateway verifica la firma descargando las llaves
-publicas desde el `jwks_uri` que anuncia el discovery del emisor. Con HS256 la
-firma depende de un secreto compartido que AWS nunca va a tener, asi que el
-autorizador no podria validar nada. Por eso el IdP firma con RSA y publica su
-llave publica.
+El pedido se asocia al claim `sub` del token, nunca a un campo que envie el
+cliente, de modo que nadie puede crear ni consultar pedidos a nombre de otro.
 
-### ms-productos
-| Metodo | Ruta                  | Descripcion               |
-|--------|-----------------------|---------------------------|
-| GET    | `/v1/productos`      | Lista el catalogo         |
-| GET    | `/v1/productos/{id}` | Consulta un producto      |
+### Usuarios de prueba
 
-### ms-pedidos — Resource Server
-| Metodo | Ruta                | Auth | Descripcion                                        |
-|--------|---------------------|------|----------------------------------------------------|
-| GET    | `/v1/public`    | No   | Comprobacion de despliegue                         |
-| GET    | `/v1/pedidos`   | Si   | Pedidos del usuario del token                      |
-| POST   | `/v1/pedidos`   | Si   | Crea un pedido — requiere scope `pedidos.escribir` |
+Viven en el tenant de Entra ID; sus contrasenias estan en `.env`, que no se
+commitea.
 
-`POST /v1/pedidos` valida el producto llamando a `ms-productos` y reenviando
-el mismo token del usuario, de modo que la identidad viaja entre servicios en
-lugar de confiar ciegamente en el llamador interno.
+| Usuario                       | Roles         | Origen                        |
+|-------------------------------|---------------|-------------------------------|
+| `admin@<tenant>`              | ADMIN, USER   | creado con `az`               |
+| `cliente@<tenant>`            | USER          | creado con `az`               |
+| `ana.perez@<tenant>`          | USER          | creado desde `/auth/registro` |
 
 ## Variables de entorno
 
-| Variable              | Servicio            | Descripcion                                     |
-|-----------------------|---------------------|-------------------------------------------------|
-| `OIDC_ISSUER`         | ms-auth             | Valor del claim `iss`. En AWS, la URL del stage |
-| `OIDC_AUDIENCIA`      | ms-auth             | Valor del claim `aud`                           |
-| `OIDC_RUTA_LLAVE`     | ms-auth             | Ruta del JWK persistido                         |
-| `SEGURIDAD_EMISORES`  | productos, pedidos  | Emisores confiables, separados por coma         |
-| `SEGURIDAD_AUDIENCIAS`| productos, pedidos  | Audiencias aceptadas. Vacio desactiva el chequeo|
-| `SEGURIDAD_ORIGENES_CORS` | productos, pedidos | Origenes del frontend permitidos             |
-| `PRODUCTOS_URL`       | ms-pedidos          | URL base de ms-productos                        |
+| Variable                   | Servicio            | Descripcion                                  |
+|----------------------------|---------------------|----------------------------------------------|
+| `SEGURIDAD_EMISORES`       | productos, pedidos  | Emisores confiables, separados por coma      |
+| `SEGURIDAD_AUDIENCIAS`     | productos, pedidos  | Audiencias aceptadas                         |
+| `SEGURIDAD_ORIGENES_CORS`  | productos, pedidos  | Origenes permitidos por CORS                 |
+| `PRODUCTOS_URL`            | ms-pedidos          | URL base de ms-productos                     |
+| `DB_HOST` … `DB_PASSWORD`  | productos, pedidos  | Conexion a la base de datos                  |
+| `GRAPH_*`                  | ms-auth             | Credenciales de la app de backend en Entra   |
+| `IDP_USUARIOS`             | ms-auth             | Usuarios del IdP retirado. Vacio en produccion |
+
+Ver `.env.example`. El archivo `.env` esta en `.gitignore`.
 
 ## Probar los endpoints
 
 ### Script de humo
 
-Ejecuta las 18 comprobaciones y verifica el codigo HTTP de cada una:
+Ejecuta las 17 comprobaciones y verifica el codigo HTTP de cada una:
 
 ```bash
 ./scripts/probar-endpoints.sh https://TU-API.execute-api.us-east-1.amazonaws.com/desarrollo
@@ -165,24 +197,25 @@ Ejecuta las 18 comprobaciones y verifica el codigo HTTP de cada una:
 
 1. Menu **Collections** → `...` → **Import** → `thunder-client/thunder-collection_EXP1.json`
 2. Pestania **Env** → `...` → **Import** → `thunder-client/thunder-environment_EXP1.json`
-3. **Activar el entorno EXP1** (marcarlo con el check). Sin entorno activo la
-   peticion de login no puede guardar el token y todo lo demas da 401.
-4. Ejecutar **1. Login IdP propio**. Su test `set-env-var` guarda el
-   `access_token` en `{{token}}` y el resto de las peticiones lo toma solo.
+3. **Activar el entorno EXP1** marcandolo con el check. Sin entorno activo la
+   peticion del token no tiene donde guardarlo y todo lo demas responde 401.
+4. Rellenar `passwordAdmin` con la contrasenia del usuario de prueba del tenant.
+5. Ejecutar **0. Token de Entra ID**. Su test `set-env-var` guarda el
+   `access_token` en `{{token}}` y las demas peticiones lo toman solas.
 
 Cada peticion trae aserciones sobre el codigo HTTP, asi que la barra de tests
 queda en verde y sirve directamente como evidencia.
 
-Para la carpeta de Cognito hay que rellenar antes `cognitoClientId` y
-`cognitoClientSecret` en el entorno.
-
-La carpeta **5. Multi emisor** llama directo a la EC2 saltandose el gateway: es
-donde se ve que el mismo Resource Server acepta tokens de dos emisores distintos.
+La peticion del token usa el flujo de contrasenia, que no necesita navegador.
+El frontend **no** lo usa: emplea Authorization Code con PKCE, que es lo que
+exige la evaluacion. El token que devuelven ambos flujos es equivalente y lo
+emite el mismo Entra ID.
 
 ### Postman
 
-Importar `postman/EXP1.postman_collection.json`. Mismo criterio: ejecutar primero
-**1. Login IdP propio**, que guarda el token en la variable de coleccion.
+Importar `postman/EXP1.postman_collection.json`. Conserva las peticiones del
+IdP propio, que quedo retirado, asi que la coleccion de referencia es la de
+Thunder Client.
 
 ### Navegador
 
@@ -193,46 +226,69 @@ claims decodificados y llamar a cada endpoint mostrando la respuesta.
 
 | Documento                     | Contenido                                     |
 |-------------------------------|-----------------------------------------------|
-| `docs/01-cognito.md`          | User Pool, resource server y flujo maquina a maquina |
-| `docs/02-entra-id.md`         | Registro en Azure, exponer la API y MSAL      |
+| `docs/01-cognito.md`          | Cognito (integrado en V2.2.0, fuera del alcance final) |
+| `docs/02-entra-id.md`         | Tenant, app registrada, scopes, roles y PKCE  |
 | `docs/03-api-gateway.md`      | Rutas, autorizador JWT y la IP cambiante      |
 | `docs/04-despliegue-ec2.md`   | La instancia, SSM y el control de costos      |
 | `docs/05-base-de-datos.md`    | RDS MySQL, aislamiento de red y esquema       |
 | `docs/06-frontend-angular.md` | Angular, MSAL, guard, interceptor y PKCE      |
 | `thunder-client/`             | Coleccion y entorno de Thunder Client         |
-| `postman/`                    | Coleccion de Postman con 16 peticiones        |
+| `postman/`                    | La misma coleccion en formato Postman         |
 | `scripts/`                    | Despliegue, pruebas y correccion de la IP      |
 
-## Como ejecutar
+## Como ejecutar en local
 
-Con Docker Compose (levanta los tres servicios):
-
-```bash
-docker compose up --build -d
-```
-
-Verificar:
+El backend necesita una base de datos. `docker-compose.local.yml` agrega un
+contenedor MySQL y apunta los servicios a el:
 
 ```bash
-curl http://localhost:9000/v1/estado
-curl http://localhost:8081/v1/productos
-curl http://localhost:8082/v1/pedidos
+cp .env.example .env        # y rellenar los valores
+docker compose -f docker-compose.yml -f docker-compose.local.yml up --build -d
 ```
+
+Comprobar. En local se llama directamente a cada microservicio, asi que las
+rutas llevan su prefijo real `/api/v1`, no el `/v1` que publica el gateway:
+
+```bash
+curl http://localhost:8081/api/v1/public
+curl http://localhost:8081/api/v1/productos -H "Authorization: Bearer <token de Entra>"
+```
+
+El frontend se ejecuta desde su propio repositorio:
+
+```bash
+git clone https://github.com/1samadhi/cloud-exp1-front-angular
+cd cloud-exp1-front-angular && npm install && npm start
+```
+
+`http://localhost:4200` esta registrado como redireccion en Entra ID y
+autorizado en el CORS del API Gateway, de modo que el frontend en desarrollo
+consume la API desplegada en AWS.
 
 Detener:
 
 ```bash
-docker compose down
+docker compose -f docker-compose.yml -f docker-compose.local.yml down
 ```
 
-Un servicio por separado, sin Docker:
+## Despliegue en AWS
 
 ```bash
-cd ms-productos && ./mvnw spring-boot:run
+# Tras cada reinicio del laboratorio la EC2 recibe una IP publica nueva
+./scripts/actualizar-api-gateway.sh <API_ID> <INSTANCE_ID>
+./scripts/desplegar-en-ec2.sh <INSTANCE_ID>
 ```
 
-## Nota sobre persistencia
+El primero corrige las integraciones del gateway; el segundo clona ambos
+repositorios en la instancia, construye la imagen del frontend y levanta el
+stack. Ninguno necesita SSH: operan por AWS Systems Manager.
 
-El catalogo y los pedidos viven en memoria. La actividad permite simular el almacen
-de datos, y evitar un contenedor de base de datos deja la solucion dentro del
-presupuesto de la cuenta AWS Academy y de la RAM de una instancia pequenia.
+La regla de firewall del RDS apunta al security group de la instancia y no a
+una direccion, asi que el cambio de IP no la afecta.
+
+## Persistencia
+
+El catalogo y los pedidos viven en **Amazon RDS MySQL**. La instancia no tiene
+acceso publico: solo la alcanzan los microservicios de la EC2. Las entidades,
+los repositorios y el aislamiento de red estan documentados en
+`docs/05-base-de-datos.md`.
