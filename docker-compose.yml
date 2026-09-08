@@ -67,12 +67,11 @@ services:
       SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:5173}
       PRODUCTOS_URL: http://ms-productos:8081
 
+  # El frontend vive en su propio repositorio:
+  #   https://github.com/1samadhi/cloud-exp1-front-angular
+  # Se construye alli y aqui solo se ejecuta la imagen resultante.
+  # Ver scripts/desplegar-en-ec2.sh, que clona ambos repositorios.
   front-angular:
-    build:
-      context: ./front-angular
-      args:
-        # En AWS la aplicacion cuelga del stage; en local, de la raiz.
-        BASE_HREF: ${BASE_HREF:-/desarrollo/}
     image: exp1/front-angular:6.0.0
     container_name: front-angular
     restart: unless-stopped

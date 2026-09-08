@@ -1,5 +1,10 @@
 # Frontend Angular con MSAL
 
+El codigo vive en un repositorio aparte, como pide el enunciado:
+https://github.com/1samadhi/cloud-exp1-front-angular
+
+Este documento resume las decisiones de diseño relevantes para la evaluacion.
+
 ## Versiones
 
 | Paquete                  | Version | Por que                                            |

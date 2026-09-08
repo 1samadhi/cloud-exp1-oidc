@@ -4,6 +4,19 @@ Solucion de la Experiencia 1 de Cloud: tres microservicios Spring Boot desacopla
 de la logica de autenticacion, protegidos con OAuth 2.0 y publicados a Internet
 a traves de AWS API Gateway.
 
+
+## Repositorios
+
+El sistema se entrega en dos repositorios, uno por componente:
+
+| Componente                | Repositorio                                                  |
+|---------------------------|--------------------------------------------------------------|
+| Microservicios (backend)  | https://github.com/1samadhi/cloud-exp1-oidc                  |
+| Frontend Angular          | https://github.com/1samadhi/cloud-exp1-front-angular         |
+
+`scripts/desplegar-en-ec2.sh` clona y actualiza ambos en la instancia: compila
+la imagen del frontend en su repositorio y levanta el stack desde este.
+
 ## Despliegue en marcha
 
 | Recurso        | Valor                                              |
