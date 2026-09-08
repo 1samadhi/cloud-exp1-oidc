@@ -53,7 +53,9 @@ echo
 echo "=== 2. Rutas protegidas SIN token (deben rechazar) ==="
 probar 401 "GET  ${PREFIJO}/productos"                  "$PROD${PREFIJO}/productos"
 probar 401 "GET  ${PREFIJO}/pedidos"                    "$PED${PREFIJO}/pedidos"
-probar 401 "GET  /auth/userinfo"                     "$AUTH/auth/userinfo"
+# El IdP propio quedo retirado en V8.1.0: su login ya no se publica.
+probar 404 "POST /auth/login (retirado del gateway)"   -X POST "$AUTH/auth/login" \
+  -H 'Content-Type: application/json' -d '{"username":"admin","password":"admin123"}' 
 
 echo
 echo "=== 3. Token de Microsoft Entra ID ==="
