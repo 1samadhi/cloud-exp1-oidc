@@ -22,3 +22,9 @@ graph:
   dominio: ${GRAPH_DOMINIO:}
   rol-usuario-id: ${GRAPH_ROL_USER_ID:}
   sp-aplicacion: ${GRAPH_SP_APLICACION:}
+
+# Identity Provider propio, retirado en favor de Entra ID. Sin usuarios
+# declarados aqui, /auth/login rechaza cualquier credencial.
+# Formato: usuario:clave:ROL[,ROL...][,otroUsuario:...]
+idp:
+  usuarios: ${IDP_USUARIOS:}
