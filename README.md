@@ -213,9 +213,9 @@ emite el mismo Entra ID.
 
 ### Postman
 
-Importar `postman/EXP1.postman_collection.json`. Conserva las peticiones del
-IdP propio, que quedo retirado, asi que la coleccion de referencia es la de
-Thunder Client.
+Importar `postman/EXP1.postman_collection.json`, equivalente a la de Thunder
+Client. Mismo criterio: ejecutar primero **0. Token de Entra ID**, que guarda el
+token en una variable de coleccion, y rellenar antes `passwordAdmin`.
 
 ### Navegador
 

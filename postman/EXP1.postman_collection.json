@@ -1,240 +1,16 @@
 {
   "info": {
-    "name": "EXP1 - Arquitectura segura con OIDC",
-    "description": "Coleccion de pruebas de la Experiencia 1.\n\nOrden sugerido:\n1. Ejecutar '1. Login IdP propio' — guarda el token en la variable de coleccion.\n2. El resto de las peticiones lo usan automaticamente.\n\nLa variable baseUrl apunta al stage del API Gateway. Para probar en local, cambiarla por http://localhost:9000, :8081 o :8082 segun el servicio.",
+    "_postman_id": "183357cf-30bf-47b3-b858-09784853ca4d",
+    "name": "EXP1 — Pedidos360",
+    "description": "Sistema Pedidos360: Entra ID como IDaaS, AWS API Gateway y microservicios Spring Boot.\n\nEjecutar primero '0. Token de Entra ID': guarda el access_token en la variable de coleccion y el resto lo toma solo.\n\nRellenar antes passwordAdmin.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo",
-      "type": "string"
-    },
-    {
-      "key": "token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "cognitoDominio",
-      "value": "exp1-oidc-u4gmyfk",
-      "type": "string"
-    },
-    {
-      "key": "cognitoClientId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "cognitoClientSecret",
-      "value": "",
-      "type": "string"
-    }
-  ],
   "item": [
     {
-      "name": "1. Identity Provider propio",
+      "name": "1. Entra ID y registro de usuarios",
       "item": [
         {
-          "name": "1. Login IdP propio",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "description": "Emite access_token e id_token firmados en RS256. El script de test guarda el token.",
-            "auth": {
-              "type": "noauth"
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const datos = pm.response.json();",
-                  "pm.collectionVariables.set('token', datos.access_token);",
-                  "pm.test('Devuelve access_token', () => pm.expect(datos.access_token).to.be.a('string'));",
-                  "pm.test('Codigo 200', () => pm.response.to.have.status(200));",
-                  "console.log('Token guardado en la variable {{token}}');"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "2. Login con credenciales invalidas (401)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "description": "Evidencia del rechazo de credenciales.",
-            "auth": {
-              "type": "noauth"
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"incorrecta\"\n}"
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Codigo 401', () => pm.response.to.have.status(401));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "3. Userinfo (protegido)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/auth/userinfo",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "userinfo"
-              ]
-            },
-            "description": "Devuelve los claims del token presentado.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}"
-                }
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Codigo 200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "4. Discovery OIDC",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/.well-known/openid-configuration",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                ".well-known",
-                "openid-configuration"
-              ]
-            },
-            "description": "Metadatos que descarga el autorizador JWT de AWS API Gateway.",
-            "auth": {
-              "type": "noauth"
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Codigo 200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "5. JWKS (llaves publicas)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/.well-known/jwks.json",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                ".well-known",
-                "jwks.json"
-              ]
-            },
-            "description": "Llaves con las que AWS verifica la firma de cada token.",
-            "auth": {
-              "type": "noauth"
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Codigo 200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "2. Cognito (Identity as a Service)",
-      "item": [
-        {
-          "name": "1. Token maquina a maquina",
+          "name": "0. Token de Entra ID",
           "request": {
             "method": "POST",
             "header": [
@@ -243,43 +19,43 @@
                 "value": "application/x-www-form-urlencoded"
               }
             ],
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "username",
-                  "value": "{{cognitoClientId}}"
-                },
-                {
-                  "key": "password",
-                  "value": "{{cognitoClientSecret}}"
-                }
+            "url": {
+              "raw": "https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/token",
+              "host": [
+                "https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/token"
               ]
             },
             "body": {
               "mode": "urlencoded",
               "urlencoded": [
                 {
+                  "key": "client_id",
+                  "value": "{{clientId}}",
+                  "type": "text"
+                },
+                {
                   "key": "grant_type",
-                  "value": "client_credentials"
+                  "value": "password",
+                  "type": "text"
                 },
                 {
                   "key": "scope",
-                  "value": "exp1-api/productos.leer exp1-api/pedidos.escribir"
+                  "value": "api://{{clientId}}/productos.leer api://{{clientId}}/pedidos.escribir",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{usuarioAdmin}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordAdmin}}",
+                  "type": "text"
                 }
               ]
             },
-            "url": {
-              "raw": "https://{{cognitoDominio}}.auth.us-east-1.amazoncognito.com/oauth2/token",
-              "host": [
-                "https://{{cognitoDominio}}.auth.us-east-1.amazoncognito.com"
-              ],
-              "path": [
-                "oauth2",
-                "token"
-              ]
-            },
-            "description": "Flujo client_credentials. Rellenar antes cognitoClientId y cognitoClientSecret en las variables de la coleccion.\n\nEl scope viene prefijado con el resource server: 'exp1-api/pedidos.escribir'."
+            "description": "Obtiene un token de Entra por el flujo de contrasenia. El frontend usa Authorization Code con PKCE, que necesita navegador; este flujo sirve solo para automatizar pruebas y devuelve un token equivalente."
           },
           "event": [
             {
@@ -287,22 +63,94 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const datos = pm.response.json();",
-                  "pm.collectionVariables.set('token', datos.access_token);",
-                  "pm.test('Codigo 200', () => pm.response.to.have.status(200));",
-                  "console.log('Token de Cognito guardado. Ojo: el autorizador del API Gateway',",
-                  "            'valida el IdP propio, asi que por el gateway dara 401.',",
-                  "            'Este token si funciona llamando directo a los microservicios.');"
+                  "pm.test(\"responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token\", pm.response.json().access_token);"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
+        },
+        {
+          "name": "6. Registro de usuario en el tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}/auth/registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario de prueba\",\n  \"usuario\": \"prueba.{{$timestamp}}\",\n  \"password\": \"{{passwordRegistro}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Crea una cuenta real en el tenant. El alias lleva {{$timestamp}} para que la peticion sea repetible: Entra rechaza con 400 un userPrincipalName que ya existe."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"responde 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Registro con datos invalidos (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}/auth/registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\",\n  \"usuario\": \"ab\",\n  \"password\": \"corta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "3. Productos (Resource Server)",
+      "name": "2. Productos (Resource Server)",
       "item": [
         {
           "name": "1. Endpoint publico (sin token)",
@@ -312,26 +160,18 @@
             "url": {
               "raw": "{{baseUrl}}/v1/public",
               "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "public"
+                "{{baseUrl}}/v1/public"
               ]
             },
-            "description": "Unica ruta abierta. Sirve para comprobar el despliegue.",
-            "auth": {
-              "type": "noauth"
-            }
+            "description": "Unica ruta abierta. Sirve para comprobar el despliegue."
           },
-          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Codigo 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"responde 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -345,26 +185,18 @@
             "url": {
               "raw": "{{baseUrl}}/v1/productos",
               "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "productos"
+                "{{baseUrl}}/v1/productos"
               ]
             },
-            "description": "El API Gateway corta la peticion antes de que llegue a la EC2.",
-            "auth": {
-              "type": "noauth"
-            }
+            "description": "El API Gateway corta la peticion antes de que llegue a la EC2."
           },
-          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Codigo 401', () => pm.response.to.have.status(401));"
+                  "pm.test(\"responde 401\", () => pm.response.to.have.status(401));"
                 ]
               }
             }
@@ -378,32 +210,27 @@
             "url": {
               "raw": "{{baseUrl}}/v1/productos",
               "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "productos"
+                "{{baseUrl}}/v1/productos"
               ]
             },
-            "description": "",
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}"
+                  "value": "{{token}}",
+                  "type": "string"
                 }
               ]
             }
           },
-          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Codigo 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"responde 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -417,33 +244,27 @@
             "url": {
               "raw": "{{baseUrl}}/v1/productos/1",
               "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "productos",
-                "1"
+                "{{baseUrl}}/v1/productos/1"
               ]
             },
-            "description": "",
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}"
+                  "value": "{{token}}",
+                  "type": "string"
                 }
               ]
             }
           },
-          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Codigo 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"responde 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -457,33 +278,28 @@
             "url": {
               "raw": "{{baseUrl}}/v1/productos/999",
               "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "productos",
-                "999"
+                "{{baseUrl}}/v1/productos/999"
               ]
             },
-            "description": "Correccion de la version 1.1.1: antes devolvia 500.",
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}"
+                  "value": "{{token}}",
+                  "type": "string"
                 }
               ]
-            }
+            },
+            "description": "Correccion de la version 1.1.1: antes devolvia 500."
           },
-          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Codigo 404', () => pm.response.to.have.status(404));"
+                  "pm.test(\"responde 404\", () => pm.response.to.have.status(404));"
                 ]
               }
             }
@@ -497,33 +313,28 @@
             "url": {
               "raw": "{{baseUrl}}/v1/productos/quien-soy",
               "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "productos",
-                "quien-soy"
+                "{{baseUrl}}/v1/productos/quien-soy"
               ]
             },
-            "description": "Muestra el emisor y los claims del token, sea cual sea el IdP.",
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}"
+                  "value": "{{token}}",
+                  "type": "string"
                 }
               ]
-            }
+            },
+            "description": "Muestra el emisor y los claims del token, sea cual sea el IdP."
           },
-          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Codigo 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"responde 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -532,7 +343,7 @@
       ]
     },
     {
-      "name": "4. Pedidos (Resource Server)",
+      "name": "3. Pedidos (Resource Server)",
       "item": [
         {
           "name": "1. Crear pedido",
@@ -547,43 +358,44 @@
             "url": {
               "raw": "{{baseUrl}}/v1/pedidos",
               "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "pedidos"
+                "{{baseUrl}}/v1/pedidos"
               ]
             },
-            "description": "Requiere el scope pedidos.escribir. Valida el producto llamando a ms-productos y propagando el mismo token.",
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}"
+                  "value": "{{token}}",
+                  "type": "string"
                 }
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"productoId\": 1,\n  \"cantidad\": 2\n}"
-            }
+              "raw": "{\n  \"productoId\": 1,\n  \"cantidad\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Requiere el scope pedidos.escribir. Valida el producto llamando a ms-productos y propagando el mismo token del usuario."
           },
-          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Codigo 201', () => pm.response.to.have.status(201));"
+                  "pm.test(\"responde 201\", () => pm.response.to.have.status(201));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "2. Crear pedido con producto inexistente (400)",
+          "name": "2. Producto inexistente (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -595,43 +407,44 @@
             "url": {
               "raw": "{{baseUrl}}/v1/pedidos",
               "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "pedidos"
+                "{{baseUrl}}/v1/pedidos"
               ]
             },
-            "description": "ms-productos responde 404 y ms-pedidos lo traduce a 400.",
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}"
+                  "value": "{{token}}",
+                  "type": "string"
                 }
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"productoId\": 999,\n  \"cantidad\": 1\n}"
-            }
+              "raw": "{\n  \"productoId\": 999,\n  \"cantidad\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "ms-productos responde 404 y ms-pedidos lo traduce a 400."
           },
-          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Codigo 400', () => pm.response.to.have.status(400));"
+                  "pm.test(\"responde 400\", () => pm.response.to.have.status(400));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "3. Crear pedido con cantidad cero (400)",
+          "name": "3. Cantidad cero (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -643,36 +456,36 @@
             "url": {
               "raw": "{{baseUrl}}/v1/pedidos",
               "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "pedidos"
+                "{{baseUrl}}/v1/pedidos"
               ]
             },
-            "description": "",
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}"
+                  "value": "{{token}}",
+                  "type": "string"
                 }
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"productoId\": 1,\n  \"cantidad\": 0\n}"
+              "raw": "{\n  \"productoId\": 1,\n  \"cantidad\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
-          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Codigo 400', () => pm.response.to.have.status(400));"
+                  "pm.test(\"responde 400\", () => pm.response.to.have.status(400));"
                 ]
               }
             }
@@ -686,38 +499,64 @@
             "url": {
               "raw": "{{baseUrl}}/v1/pedidos",
               "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "pedidos"
+                "{{baseUrl}}/v1/pedidos"
               ]
             },
-            "description": "Devuelve solo los pedidos del 'sub' del token.",
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}"
+                  "value": "{{token}}",
+                  "type": "string"
                 }
               ]
-            }
+            },
+            "description": "Devuelve solo los pedidos cuyo cliente es el 'sub' del token."
           },
-          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Codigo 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"responde 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
           ]
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo"
+    },
+    {
+      "key": "tenantId",
+      "value": "5cb85dc6-a73b-41fc-b2b9-5b2a9b3f531b"
+    },
+    {
+      "key": "clientId",
+      "value": "c483f102-da2d-41b5-b48e-26e7ca78ab98"
+    },
+    {
+      "key": "usuarioAdmin",
+      "value": "admin@pedidos360ismaoyarzun.onmicrosoft.com"
+    },
+    {
+      "key": "passwordAdmin",
+      "value": ""
+    },
+    {
+      "key": "passwordRegistro",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": ""
     }
   ]
 }
