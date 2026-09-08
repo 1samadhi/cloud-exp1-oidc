@@ -47,6 +47,9 @@ public class SecurityConfig {
                         // El login y los metadatos OIDC deben ser publicos: AWS API
                         // Gateway descarga el discovery y el JWKS sin presentar token.
                         .requestMatchers("/auth/login",
+                                // Quien se registra todavia no tiene cuenta y por
+                                // lo tanto no puede presentar ningun token.
+                                "/auth/registro",
                                 "/.well-known/**",
                                 "/api/v1/estado").permitAll()
                         .anyRequest().authenticated())

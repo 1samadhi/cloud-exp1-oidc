@@ -1,0 +1,32 @@
+<h1>Crear cuenta</h1>
+<p class="intro">
+  Tu cuenta se crea dentro del tenant de Microsoft Entra ID. Una vez creada,
+  inicias sesion con el boton de Microsoft como cualquier otro usuario.
+</p>
+
+@if (creado()) {
+  <section class="tarjeta ok">
+    <h2>Cuenta creada</h2>
+    <p>Usuario: <code>{{ creado() }}</code></p>
+    <p>Ya puedes iniciar sesion con Microsoft usando esa cuenta.</p>
+    <a routerLink="/">Volver al inicio</a>
+  </section>
+} @else {
+  <section class="tarjeta">
+    @if (error()) { <p class="error">{{ error() }}</p> }
+    <label>Nombre para mostrar
+      <input [(ngModel)]="nombre" name="nombre" placeholder="Ana Perez">
+    </label>
+    <label>Usuario
+      <input [(ngModel)]="usuario" name="usuario" placeholder="ana.perez">
+      <small>Se creara como usuario del dominio del tenant.</small>
+    </label>
+    <label>Contrasenia
+      <input type="password" [(ngModel)]="password" name="password">
+      <small>Minimo 8 caracteres, con mayusculas, minusculas y numeros.</small>
+    </label>
+    <button (click)="registrar()" [disabled]="enviando()">
+      {{ enviando() ? 'Creando...' : 'Crear cuenta' }}
+    </button>
+  </section>
+}

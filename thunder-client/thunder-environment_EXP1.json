@@ -41,6 +41,14 @@
     {
       "name": "cognitoClientSecret",
       "value": ""
+    },
+    {
+      "name": "passwordRegistro",
+      "value": ""
+    },
+    {
+      "name": "usuarioRegistro",
+      "value": "prueba.thunder"
     }
   ]
 }

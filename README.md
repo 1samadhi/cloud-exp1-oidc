@@ -185,6 +185,7 @@ claims decodificados y llamar a cada endpoint mostrando la respuesta.
 | `docs/03-api-gateway.md`      | Rutas, autorizador JWT y la IP cambiante      |
 | `docs/04-despliegue-ec2.md`   | La instancia, SSM y el control de costos      |
 | `docs/05-base-de-datos.md`    | RDS MySQL, aislamiento de red y esquema       |
+| `docs/06-frontend-angular.md` | Angular, MSAL, guard, interceptor y PKCE      |
 | `thunder-client/`             | Coleccion y entorno de Thunder Client         |
 | `postman/`                    | Coleccion de Postman con 16 peticiones        |
 | `scripts/`                    | Despliegue, pruebas y correccion de la IP      |

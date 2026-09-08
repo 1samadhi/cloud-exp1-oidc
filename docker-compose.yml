@@ -18,6 +18,13 @@ services:
       OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:9000}
       OIDC_AUDIENCIA: ${OIDC_AUDIENCIA:-exp1-api}
       OIDC_RUTA_LLAVE: /app/llaves/jwk.json
+      # Registro de usuarios en el tenant a traves de Microsoft Graph
+      GRAPH_TENANT_ID: ${GRAPH_TENANT_ID:-}
+      GRAPH_CLIENT_ID: ${GRAPH_CLIENT_ID:-}
+      GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET:-}
+      GRAPH_DOMINIO: ${ENTRA_DOMINIO:-}
+      GRAPH_ROL_USER_ID: ${GRAPH_ROL_USER_ID:-}
+      GRAPH_SP_APLICACION: ${GRAPH_SP_APLICACION:-}
     volumes:
       # La llave RSA debe sobrevivir a los reinicios: si cambia, los tokens ya
       # emitidos y el JWKS cacheado por AWS API Gateway dejan de coincidir.
@@ -60,20 +67,14 @@ services:
       SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:5173}
       PRODUCTOS_URL: http://ms-productos:8081
 
-  front-end:
+  front-angular:
     build:
-      context: ./front-end
+      context: ./front-angular
       args:
-        # Vite incrusta estas variables en el bundle durante el build
-        VITE_ENTRA_CLIENT_ID: ${VITE_ENTRA_CLIENT_ID:-}
-        VITE_ENTRA_TENANT_ID: ${VITE_ENTRA_TENANT_ID:-}
-        VITE_REDIRECT_URI: ${VITE_REDIRECT_URI:-}
-        VITE_ENTRA_SCOPE_API: ${VITE_ENTRA_SCOPE_API:-}
-        VITE_API_PRODUCTOS: ${VITE_API_PRODUCTOS:-http://localhost:8081}
-        VITE_API_PEDIDOS: ${VITE_API_PEDIDOS:-http://localhost:8082}
-        VITE_API_AUTH: ${VITE_API_AUTH:-http://localhost:9000}
-    image: exp1/front-end:3.0.0
-    container_name: front-end
+        # En AWS la aplicacion cuelga del stage; en local, de la raiz.
+        BASE_HREF: ${BASE_HREF:-/desarrollo/}
+    image: exp1/front-angular:6.0.0
+    container_name: front-angular
     restart: unless-stopped
     ports:
       - "80:80"

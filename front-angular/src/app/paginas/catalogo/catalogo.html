@@ -1,0 +1,21 @@
+<h1>Catalogo</h1>
+<p class="intro">
+  Datos servidos por ms-productos desde la base de datos RDS. El token viaja
+  automaticamente: el MsalInterceptor lo adjunta porque esta URL esta declarada
+  en el protectedResourceMap.
+</p>
+
+@if (error()) { <p class="error">{{ error() }}</p> }
+@if (mensaje()) { <p class="ok">{{ mensaje() }}</p> }
+
+<div class="rejilla">
+  @for (p of productos(); track p.id) {
+    <article class="producto">
+      <h3>{{ p.nombre }}</h3>
+      <p class="precio">{{ p.precio | number:'1.0-0' }} CLP</p>
+      <button (click)="pedir(p)">Pedir uno</button>
+    </article>
+  } @empty {
+    <p>No hay productos que mostrar.</p>
+  }
+</div>

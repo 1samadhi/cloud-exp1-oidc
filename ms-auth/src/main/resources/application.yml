@@ -12,3 +12,13 @@ oidc:
   audiencia: ${OIDC_AUDIENCIA:exp1-api}
   vigencia-segundos: ${OIDC_VIGENCIA:3600}
   ruta-llave: ${OIDC_RUTA_LLAVE:./llaves/jwk.json}
+
+# Registro de usuarios en el tenant a traves de Microsoft Graph.
+# Sin estas variables el endpoint /auth/registro responde 503.
+graph:
+  tenant-id: ${GRAPH_TENANT_ID:}
+  client-id: ${GRAPH_CLIENT_ID:}
+  client-secret: ${GRAPH_CLIENT_SECRET:}
+  dominio: ${GRAPH_DOMINIO:}
+  rol-usuario-id: ${GRAPH_ROL_USER_ID:}
+  sp-aplicacion: ${GRAPH_SP_APLICACION:}

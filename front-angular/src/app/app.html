@@ -1,0 +1,28 @@
+<header class="barra">
+  <a routerLink="/" class="marca">Pedidos<span>360</span></a>
+
+  <nav>
+    <a routerLink="/" routerLinkActive="activo" [routerLinkActiveOptions]="{exact:true}">Inicio</a>
+    <a routerLink="/catalogo" routerLinkActive="activo">Catalogo</a>
+    <a routerLink="/pedidos" routerLinkActive="activo">Mis pedidos</a>
+    <a routerLink="/perfil" routerLinkActive="activo">Mi token</a>
+  </nav>
+
+  <div class="sesion">
+    @if (cuenta(); as c) {
+      <span class="usuario">{{ c.name || c.username }}</span>
+      <button class="secundario" (click)="salir()">Cerrar sesion</button>
+    } @else {
+      <a routerLink="/registro" class="enlace-registro">Crear cuenta</a>
+      <button (click)="entrar()">Iniciar sesion con Microsoft</button>
+    }
+  </div>
+</header>
+
+<main>
+  @if (cargando()) {
+    <p class="aviso">Comprobando la sesion...</p>
+  } @else {
+    <router-outlet />
+  }
+</main>

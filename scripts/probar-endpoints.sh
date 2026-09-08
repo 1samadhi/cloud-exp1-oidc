@@ -88,7 +88,11 @@ probar 400 "POST ${PREFIJO}/pedidos con cantidad cero"  -X POST "$PED${PREFIJO}/
 probar 200 "GET  ${PREFIJO}/pedidos"                    "$PED${PREFIJO}/pedidos" "${AUTORIZACION[@]}"
 
 echo
-echo "=== 5. Token invalido ==="
+echo "=== 5. Registro de usuarios en el tenant (Microsoft Graph) ==="
+probar 400 "POST /auth/registro con datos invalidos"  -X POST "$AUTH/auth/registro" \
+  -H 'Content-Type: application/json' -d '{"nombre":"","usuario":"ab","password":"corta"}'
+
+echo "=== 6. Token invalido ==="
 probar 401 "GET  ${PREFIJO}/productos con token basura" "$PROD${PREFIJO}/productos" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vZmFsc28ifQ.x"
 

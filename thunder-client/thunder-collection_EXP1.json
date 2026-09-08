@@ -609,6 +609,76 @@
         }
       ],
       "docs": "La misma ruta acepta un emisor distinto porque el Resource Server resuelve el validador segun el claim 'iss'. Por el gateway esto daria 401."
+    },
+    {
+      "_id": "ee83104b-3883-48d1-9614-8fa6abfac5fc",
+      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
+      "containerId": "fbc613a3-925f-4e72-92d6-34018f95836a",
+      "name": "6. Registro de usuario en el tenant",
+      "url": "{{baseUrl}}/auth/registro",
+      "method": "POST",
+      "sortNum": 60,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"nombre\": \"Usuario de prueba\",\n  \"usuario\": \"prueba.thunder\",\n  \"password\": \"{{passwordRegistro}}\"\n}",
+        "form": []
+      },
+      "tests": [
+        {
+          "type": "res-code",
+          "custom": "",
+          "action": "equal",
+          "value": "201"
+        }
+      ],
+      "params": [],
+      "auth": {
+        "type": "none"
+      },
+      "created": "2026-09-08T00:00:00.000Z",
+      "modified": "2026-09-08T00:00:00.000Z",
+      "docs": ""
+    },
+    {
+      "_id": "4a6a7273-ff73-47ef-83dd-c38430c53326",
+      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
+      "containerId": "fbc613a3-925f-4e72-92d6-34018f95836a",
+      "name": "7. Registro con datos invalidos (400)",
+      "url": "{{baseUrl}}/auth/registro",
+      "method": "POST",
+      "sortNum": 70,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"nombre\": \"\",\n  \"usuario\": \"ab\",\n  \"password\": \"corta\"\n}",
+        "form": []
+      },
+      "tests": [
+        {
+          "type": "res-code",
+          "custom": "",
+          "action": "equal",
+          "value": "400"
+        }
+      ],
+      "params": [],
+      "auth": {
+        "type": "none"
+      },
+      "created": "2026-09-08T00:00:00.000Z",
+      "modified": "2026-09-08T00:00:00.000Z",
+      "docs": ""
     }
   ],
   "settings": {

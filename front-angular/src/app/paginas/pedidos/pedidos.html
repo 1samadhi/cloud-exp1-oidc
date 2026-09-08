@@ -1,0 +1,30 @@
+<h1>Mis pedidos</h1>
+<p class="intro">
+  Solo se ven los pedidos del usuario del token. ms-pedidos filtra por el claim
+  <code>sub</code>, no por un dato que mande el navegador, de modo que nadie
+  puede consultar los pedidos de otro.
+</p>
+
+@if (error()) { <p class="error">{{ error() }}</p> }
+
+<section class="tarjeta">
+  <h2>Nuevo pedido</h2>
+  <div class="formulario-linea">
+    <label>Producto <input type="number" min="1" [(ngModel)]="productoId" name="productoId"></label>
+    <label>Cantidad <input type="number" min="1" [(ngModel)]="cantidad" name="cantidad"></label>
+    <button (click)="crear()">Crear</button>
+  </div>
+  <p class="nota">Requiere el permiso <code>pedidos.escribir</code> o el rol ADMIN.</p>
+</section>
+
+<table>
+  <thead><tr><th>#</th><th>Producto</th><th>Cantidad</th><th>Creado</th></tr></thead>
+  <tbody>
+    @for (p of pedidos(); track p.id) {
+      <tr><td>{{ p.id }}</td><td>{{ p.productoId }}</td><td>{{ p.cantidad }}</td>
+          <td>{{ p.creado | date:'short' }}</td></tr>
+    } @empty {
+      <tr><td colspan="4">Todavia no tienes pedidos.</td></tr>
+    }
+  </tbody>
+</table>
