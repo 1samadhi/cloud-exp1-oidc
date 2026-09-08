@@ -49,6 +49,22 @@
     {
       "name": "usuarioRegistro",
       "value": "prueba.thunder"
+    },
+    {
+      "name": "tenantId",
+      "value": "5cb85dc6-a73b-41fc-b2b9-5b2a9b3f531b"
+    },
+    {
+      "name": "clientId",
+      "value": "c483f102-da2d-41b5-b48e-26e7ca78ab98"
+    },
+    {
+      "name": "usuarioAdmin",
+      "value": "admin@pedidos360ismaoyarzun.onmicrosoft.com"
+    },
+    {
+      "name": "passwordAdmin",
+      "value": ""
     }
   ]
 }

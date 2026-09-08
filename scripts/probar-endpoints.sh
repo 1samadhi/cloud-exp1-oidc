@@ -11,6 +11,8 @@
 #
 set -uo pipefail
 
+RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 BASE=${1:-}
 LOCAL=false
 if [[ -n "$BASE" && "$BASE" == http://localhost* ]]; then
@@ -54,27 +56,41 @@ probar 401 "GET  ${PREFIJO}/pedidos"                    "$PED${PREFIJO}/pedidos"
 probar 401 "GET  /auth/userinfo"                     "$AUTH/auth/userinfo"
 
 echo
-echo "=== 3. Login en el Identity Provider propio ==="
-probar 401 "POST /auth/login con clave incorrecta"   -X POST "$AUTH/auth/login" \
-  -H 'Content-Type: application/json' -d '{"username":"admin","password":"incorrecta"}'
-probar 200 "POST /auth/login con credenciales validas" -X POST "$AUTH/auth/login" \
-  -H 'Content-Type: application/json' -d '{"username":"admin","password":"admin123"}'
+echo "=== 3. Token de Microsoft Entra ID ==="
+# El frontend usa Authorization Code con PKCE, que necesita navegador. Para una
+# prueba automatizada se usa el flujo de contrasenia contra el mismo tenant: el
+# token resultante es equivalente y lo emite el mismo Entra ID.
+if [[ -f "$RAIZ/.env" ]]; then
+  set -a; source "$RAIZ/.env" >/dev/null 2>&1; set +a
+fi
 
-TOKEN=$(curl -s -m 25 -X POST "$AUTH/auth/login" -H 'Content-Type: application/json' \
-        -d '{"username":"admin","password":"admin123"}' \
+if [[ -z "${ENTRA_TENANT_ID:-}" || -z "${ENTRA_CLIENT_ID:-}" || -z "${ENTRA_PASSWORD_ADMIN:-}" ]]; then
+  echo "  Faltan ENTRA_TENANT_ID, ENTRA_CLIENT_ID o ENTRA_PASSWORD_ADMIN en .env" >&2
+  exit 1
+fi
+
+probar 400 "Token con credenciales incorrectas" \
+  -X POST "https://login.microsoftonline.com/$ENTRA_TENANT_ID/oauth2/v2.0/token" \
+  -d "client_id=$ENTRA_CLIENT_ID" -d "grant_type=password" \
+  -d "scope=api://$ENTRA_CLIENT_ID/productos.leer" \
+  -d "username=$ENTRA_USUARIO_ADMIN" -d "password=incorrecta"
+
+TOKEN=$(curl -s -m 25 -X POST "https://login.microsoftonline.com/$ENTRA_TENANT_ID/oauth2/v2.0/token" \
+        -d "client_id=$ENTRA_CLIENT_ID" -d "grant_type=password" \
+        -d "scope=api://$ENTRA_CLIENT_ID/productos.leer api://$ENTRA_CLIENT_ID/pedidos.escribir" \
+        -d "username=$ENTRA_USUARIO_ADMIN" --data-urlencode "password=$ENTRA_PASSWORD_ADMIN" \
         | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])' 2>/dev/null)
 
 if [[ -z "$TOKEN" ]]; then
-  echo "  No se pudo obtener el token: se omiten las pruebas autenticadas." >&2
+  echo "  No se pudo obtener el token de Entra: se omiten las pruebas autenticadas." >&2
   exit 1
 fi
-echo "  token obtenido (${#TOKEN} caracteres)"
+echo "  token de Entra obtenido (${#TOKEN} caracteres)"
 
 AUTORIZACION=(-H "Authorization: Bearer $TOKEN")
 
 echo
 echo "=== 4. Rutas protegidas CON token ==="
-probar 200 "GET  /auth/userinfo"                     "$AUTH/auth/userinfo" "${AUTORIZACION[@]}"
 probar 200 "GET  ${PREFIJO}/productos"                  "$PROD${PREFIJO}/productos" "${AUTORIZACION[@]}"
 probar 200 "GET  ${PREFIJO}/productos/1"                "$PROD${PREFIJO}/productos/1" "${AUTORIZACION[@]}"
 probar 404 "GET  ${PREFIJO}/productos/999 (no existe)"  "$PROD${PREFIJO}/productos/999" "${AUTORIZACION[@]}"

@@ -7,14 +7,14 @@
   "folders": [
     {
       "_id": "fbc613a3-925f-4e72-92d6-34018f95836a",
-      "name": "1. Identity Provider propio",
+      "name": "1. Entra ID (Identity as a Service)",
       "containerId": "",
       "created": "2026-08-28T15:56:31.956967+00:00",
       "sortNum": 10000
     },
     {
       "_id": "ffb91d1c-9484-47db-887e-d7093a3be236",
-      "name": "2. Cognito (Identity as a Service)",
+      "name": "2. Emisor no aceptado por el gateway",
       "containerId": "",
       "created": "2026-08-28T15:56:31.956967+00:00",
       "sortNum": 20000
@@ -42,6 +42,68 @@
     }
   ],
   "requests": [
+    {
+      "_id": "f941ed29-5942-42fb-b2a1-38692cfac2cc",
+      "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
+      "containerId": "fbc613a3-925f-4e72-92d6-34018f95836a",
+      "name": "0. Token de Entra ID",
+      "url": "https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/token",
+      "method": "POST",
+      "sortNum": 5,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
+      "params": [],
+      "auth": {
+        "type": "none"
+      },
+      "created": "2026-09-08T00:00:00.000Z",
+      "modified": "2026-09-08T00:00:00.000Z",
+      "docs": "Obtiene un token de Entra por el flujo de contrasenia. El frontend usa Authorization Code con PKCE, que necesita navegador; este flujo sirve solo para automatizar pruebas y devuelve un token equivalente.",
+      "body": {
+        "type": "formencoded",
+        "raw": "",
+        "form": [
+          {
+            "name": "client_id",
+            "value": "{{clientId}}"
+          },
+          {
+            "name": "grant_type",
+            "value": "password"
+          },
+          {
+            "name": "scope",
+            "value": "api://{{clientId}}/productos.leer api://{{clientId}}/pedidos.escribir"
+          },
+          {
+            "name": "username",
+            "value": "{{usuarioAdmin}}"
+          },
+          {
+            "name": "password",
+            "value": "{{passwordAdmin}}"
+          }
+        ]
+      },
+      "tests": [
+        {
+          "type": "res-code",
+          "custom": "",
+          "action": "equal",
+          "value": "200"
+        },
+        {
+          "type": "set-env-var",
+          "custom": "json.access_token",
+          "action": "setto",
+          "value": "token"
+        }
+      ]
+    },
     {
       "_id": "7b1e451c-2fc9-42ef-9bde-71fa012b986e",
       "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
