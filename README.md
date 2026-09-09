@@ -148,6 +148,7 @@ microservicio, que conserva su propio prefijo `/api/v1`.
 | GET    | `/v1/productos/{id}`      | Consulta un producto                         |
 | GET    | `/v1/productos/quien-soy` | Emisor, sujeto y claims del token presentado |
 | GET    | `/v1/pedidos`             | Pedidos del usuario del token                |
+| GET    | `/v1/pedidos/todos`       | Todos los pedidos — exige el rol `ADMIN`     |
 | POST   | `/v1/pedidos`             | Crea un pedido                               |
 
 `POST /v1/pedidos` exige el scope `pedidos.escribir` o el rol `ADMIN`, y valida
@@ -156,6 +157,26 @@ identidad viaja entre servicios en lugar de confiar en el llamador interno.
 
 El pedido se asocia al claim `sub` del token, nunca a un campo que envie el
 cliente, de modo que nadie puede crear ni consultar pedidos a nombre de otro.
+
+### Codigos de respuesta
+
+| Situacion                               | Codigo |
+|-----------------------------------------|--------|
+| Token valido y permisos suficientes     | 200    |
+| Sin token, invalido o expirado          | 401    |
+| Token valido sin el rol o el scope      | 403    |
+| Peticion que no viene del API Gateway   | 403    |
+
+`GET /v1/pedidos/todos` demuestra el tercer caso: el usuario `cliente` recibe
+403 con un token perfectamente valido, que es distinto del 401 de quien no
+presenta ninguno.
+
+### Punto de entrada unico
+
+Los microservicios rechazan con 403 cualquier peticion que no traiga la
+cabecera `X-Origen-Gateway` que inyecta el API Gateway, de modo que la
+instancia no se puede llamar directamente aunque tenga IP publica. El alcance
+y las limitaciones de esa medida estan en `docs/03-api-gateway.md`.
 
 ### Usuarios de prueba
 
@@ -179,6 +200,7 @@ commitea.
 | `DB_HOST` … `DB_PASSWORD`  | productos, pedidos  | Conexion a la base de datos                  |
 | `GRAPH_*`                  | ms-auth             | Credenciales de la app de backend en Entra   |
 | `IDP_USUARIOS`             | ms-auth             | Usuarios del IdP retirado. Vacio en produccion |
+| `SEGURIDAD_SECRETO_GATEWAY`| productos, pedidos  | Cabecera que exige que la peticion venga del gateway |
 
 Ver `.env.example`. El archivo `.env` esta en `.gitignore`.
 
@@ -186,11 +208,15 @@ Ver `.env.example`. El archivo `.env` esta en `.gitignore`.
 
 ### Script de humo
 
-Ejecuta las 17 comprobaciones y verifica el codigo HTTP de cada una:
+Ejecuta las 20 comprobaciones y verifica el codigo HTTP de cada una:
 
 ```bash
 ./scripts/probar-endpoints.sh https://TU-API.execute-api.us-east-1.amazonaws.com/desarrollo
 ./scripts/probar-endpoints.sh http://localhost      # contra el stack local
+
+# Definir IP_EC2 agrega la comprobacion de que la instancia rechaza las
+# llamadas que no vienen del gateway:
+IP_EC2=<ip> ./scripts/probar-endpoints.sh https://TU-API...
 ```
 
 ### Thunder Client

@@ -108,3 +108,62 @@ microservicios tengan que coordinar sus rutas internas entre si.
 Al elegir la ruta, API Gateway prefiere los segmentos literales sobre las
 variables: `/v1/productos/quien-soy` gana sobre `/v1/productos/{id}`, asi que
 "quien-soy" no se interpreta como un identificador.
+
+## Punto de entrada unico
+
+El enunciado exige que el API Gateway sea el unico punto de entrada. La
+instancia EC2, sin embargo, tiene IP publica y expone los puertos de cada
+microservicio, asi que un `curl` directo se saltaba el gateway y su autorizador.
+
+La solucion correcta es una subred privada con **VPC Link**, que exige un
+balanceador y cuesta del orden de USD 16 al mes: se come el presupuesto de la
+cuenta academica. En su lugar:
+
+```
+integracion del gateway  ──append:header.X-Origen-Gateway=<secreto>──▶  EC2
+                                                                        │
+                                          FiltroOrigenGateway  ─────────┘
+                                          sin la cabecera → 403
+```
+
+El filtro se ejecuta **antes** de la cadena de Spring Security, de modo que el
+trafico ajeno ni siquiera llega a la validacion del token.
+
+Comprobacion:
+
+```bash
+# con un token perfectamente valido, directo a la instancia
+curl -H "Authorization: Bearer $TOKEN" http://<ip>:8081/api/v1/productos
+# -> 403 {"error":"Esta API solo acepta peticiones a traves del API Gateway"}
+```
+
+**Que no es esto.** No es aislamiento de red y no conviene presentarlo como tal:
+quien conozca el secreto puede seguir llamando directamente, y el secreto viaja
+en claro entre el gateway y la instancia porque la integracion es HTTP. Lo que
+consigue es que el gateway sea el unico camino funcional y que las reglas del
+borde no se puedan eludir. Es una mitigacion consciente frente a una restriccion
+de presupuesto, no la arquitectura ideal.
+
+El puerto 22 quedo cerrado: la instancia se opera por AWS Systems Manager.
+
+### Llamadas entre microservicios
+
+ms-pedidos valida el producto llamando a ms-productos. Esa peticion es interna y
+tampoco pasa por el gateway, asi que `CatalogoClient` reenvia la misma cabecera.
+Sin eso, ms-productos la rechazaria con 403 y el pedido se rechazaria con un 400
+enganioso: "el producto no existe".
+
+## Codigos de respuesta
+
+La pauta pide demostrar 200, 401 y 403 coherentes:
+
+| Situacion                                        | Codigo | Quien lo emite            |
+|--------------------------------------------------|--------|---------------------------|
+| Token valido y permisos suficientes              | 200    | el microservicio          |
+| Sin token, o token invalido o expirado           | 401    | el autorizador del gateway |
+| Token valido pero sin el rol o el scope          | 403    | Spring Security           |
+| Peticion que no viene del gateway                | 403    | FiltroOrigenGateway       |
+
+`GET /v1/pedidos/todos` existe para demostrar el tercer caso: exige el rol
+`ADMIN`, de modo que el usuario `cliente` recibe 403 con un token perfectamente
+valido. Es la diferencia entre "no se quien eres" y "se quien eres y no puedes".
