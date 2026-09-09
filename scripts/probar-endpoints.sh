@@ -104,13 +104,33 @@ probar 400 "POST ${PREFIJO}/pedidos con producto inexistente" -X POST "$PED${PRE
 probar 400 "POST ${PREFIJO}/pedidos con cantidad cero"  -X POST "$PED${PREFIJO}/pedidos" \
   "${AUTORIZACION[@]}" -H 'Content-Type: application/json' -d '{"productoId":1,"cantidad":0}'
 probar 200 "GET  ${PREFIJO}/pedidos"                    "$PED${PREFIJO}/pedidos" "${AUTORIZACION[@]}"
+probar 200 "GET  ${PREFIJO}/pedidos/todos (rol ADMIN)"  "$PED${PREFIJO}/pedidos/todos" "${AUTORIZACION[@]}"
 
 echo
 echo "=== 5. Registro de usuarios en el tenant (Microsoft Graph) ==="
 probar 400 "POST /auth/registro con datos invalidos"  -X POST "$AUTH/auth/registro" \
   -H 'Content-Type: application/json' -d '{"nombre":"","usuario":"ab","password":"corta"}'
 
-echo "=== 6. Token invalido ==="
+echo "=== 6. Autorizacion por rol: 403 con token valido pero sin permisos ==="
+TOKEN_CLIENTE=$(curl -s -m 25 -X POST "https://login.microsoftonline.com/$ENTRA_TENANT_ID/oauth2/v2.0/token" \
+        -d "client_id=$ENTRA_CLIENT_ID" -d "grant_type=password" \
+        -d "scope=api://$ENTRA_CLIENT_ID/productos.leer api://$ENTRA_CLIENT_ID/pedidos.escribir" \
+        -d "username=$ENTRA_USUARIO_CLIENTE" --data-urlencode "password=$ENTRA_PASSWORD_CLIENTE" \
+        | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])' 2>/dev/null)
+probar 403 "GET  ${PREFIJO}/pedidos/todos como cliente"  "$PED${PREFIJO}/pedidos/todos" \
+  -H "Authorization: Bearer $TOKEN_CLIENTE"
+
+echo "=== 7. El API Gateway es el unico punto de entrada ==="
+# Define IP_EC2 para comprobar que una llamada directa a la instancia, con un
+# token perfectamente valido, se rechaza por no venir del gateway.
+if [[ -n "${IP_EC2:-}" ]]; then
+  probar 403 "Llamada directa a la EC2, saltandose el gateway" \
+    "http://$IP_EC2:8081/api/v1/productos" "${AUTORIZACION[@]}"
+else
+  echo "  (omitido: define IP_EC2 para incluir esta comprobacion)"
+fi
+
+echo "=== 8. Token invalido ==="
 probar 401 "GET  ${PREFIJO}/productos con token basura" "$PROD${PREFIJO}/productos" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vZmFsc28ifQ.x"
 

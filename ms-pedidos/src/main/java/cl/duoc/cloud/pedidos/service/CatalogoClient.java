@@ -21,9 +21,12 @@ public class CatalogoClient {
     private static final Logger log = LoggerFactory.getLogger(CatalogoClient.class);
 
     private final RestClient cliente;
+    private final String secretoGateway;
 
-    public CatalogoClient(@Value("${servicios.productos-url}") String urlProductos) {
+    public CatalogoClient(@Value("${servicios.productos-url}") String urlProductos,
+            @Value("${seguridad.secreto-gateway:}") String secretoGateway) {
         this.cliente = RestClient.builder().baseUrl(urlProductos).build();
+        this.secretoGateway = secretoGateway;
     }
 
     public boolean existeProducto(Long id) {
@@ -35,6 +38,15 @@ public class CatalogoClient {
             cliente.get()
                     .uri("/api/v1/productos/{id}", id)
                     .header("Authorization", "Bearer " + token)
+                    // ms-productos solo atiende peticiones que lleguen del API
+                    // Gateway. Esta llamada es interna, asi que reenvia la misma
+                    // cabecera; sin ella recibiria 403 y el producto se daria
+                    // por inexistente.
+                    .headers(h -> {
+                        if (!secretoGateway.isBlank()) {
+                            h.set("X-Origen-Gateway", secretoGateway);
+                        }
+                    })
                     .retrieve()
                     .toBodilessEntity();
             return true;
