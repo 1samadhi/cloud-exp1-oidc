@@ -27,6 +27,11 @@ public class PedidoService {
         return repositorio.findByClienteOrderByCreadoDesc(cliente);
     }
 
+    /** Solo para administradores: ignora el filtro por cliente. */
+    public List<Pedido> listarTodos() {
+        return repositorio.findAllByOrderByCreadoDesc();
+    }
+
     public Pedido crear(String cliente, Long productoId, int cantidad) {
         return repositorio.save(new Pedido(cliente, productoId, cantidad));
     }

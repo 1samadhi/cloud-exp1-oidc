@@ -45,7 +45,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-cambiar}
       SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-http://localhost:9000}
       SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-}
-      SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:5173}
+      SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:4200}
+      # Exige que la peticion venga del API Gateway. Vacio lo desactiva.
+      SEGURIDAD_SECRETO_GATEWAY: ${SEGURIDAD_SECRETO_GATEWAY:-}
 
   ms-pedidos:
     build: ./ms-pedidos
@@ -64,7 +66,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-cambiar}
       SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-http://localhost:9000}
       SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-}
-      SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:5173}
+      SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:4200}
+      # Exige que la peticion venga del API Gateway. Vacio lo desactiva.
+      SEGURIDAD_SECRETO_GATEWAY: ${SEGURIDAD_SECRETO_GATEWAY:-}
       PRODUCTOS_URL: http://ms-productos:8081
 
   # El frontend vive en su propio repositorio:

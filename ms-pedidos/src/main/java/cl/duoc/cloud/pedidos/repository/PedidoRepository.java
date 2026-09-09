@@ -13,4 +13,6 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
      * select * from pedidos where cliente = ?
      */
     List<Pedido> findByClienteOrderByCreadoDesc(String cliente);
+
+    List<Pedido> findAllByOrderByCreadoDesc();
 }

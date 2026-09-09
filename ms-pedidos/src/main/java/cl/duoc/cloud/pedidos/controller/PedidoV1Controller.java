@@ -45,6 +45,19 @@ public class PedidoV1Controller {
         return servicio.listarPorCliente(jwt.getSubject());
     }
 
+    /**
+     * Todos los pedidos del sistema, no solo los del usuario del token.
+     *
+     * Reservado al rol ADMIN. Es el endpoint que demuestra el 403: un usuario
+     * con token valido pero sin el rol recibe "prohibido", que es distinto del
+     * 401 de quien no presenta token.
+     */
+    @GetMapping("/pedidos/todos")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Pedido> listarTodos() {
+        return servicio.listarTodos();
+    }
+
     @PostMapping("/pedidos")
     @PreAuthorize("hasAuthority('SCOPE_pedidos.escribir') or hasRole('ADMIN')")
     public ResponseEntity<?> crear(@RequestBody NuevoPedidoDTO peticion,
