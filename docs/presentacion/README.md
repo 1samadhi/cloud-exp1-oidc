@@ -1,7 +1,12 @@
 # Presentacion — Evaluacion Parcial N.º 2
 
-`Pedidos360-presentacion.pdf`: 14 laminas en 16:9 mas una pagina final de apoyo
-para el presentador, que **no se proyecta**.
+Dos formatos del mismo mazo: 14 laminas en 16:9 mas una final de apoyo para el
+presentador, que **no se proyecta**.
+
+| Archivo | Para que |
+|---|---|
+| `Pedidos360-presentacion.pptx` | Editable en PowerPoint, LibreOffice o Google Slides |
+| `Pedidos360-presentacion.pdf`  | Proyectar sin depender del software instalado |
 
 Las laminas marcadas **DEMOSTRACION** son las que exige la pauta mostrar en vivo
 en la plataforma cloud. La lamina es solo el encabezado: lo que se muestra es la
@@ -18,7 +23,26 @@ consola o la aplicacion.
 | 10, 13 | Evidencia del funcionamiento de cada ruta | 15% |
 | 12     | Backend y frontend desplegados, activos e integrados | — |
 
-## Regenerarla
+## Regenerar el PPTX
+
+```bash
+python3 -m venv /tmp/pptx && /tmp/pptx/bin/pip install python-pptx
+/tmp/pptx/bin/python construir-pptx.py
+```
+
+Las laminas se construyen nativas y no convertidas desde el PDF, asi que el
+texto queda editable. `construir-pptx.py` interpreta `**negrita**`, `` `codigo` ``
+y `~cursiva~`; la cursiva no usa guion bajo a proposito, porque identificadores
+como `code_challenge` lo llevan dentro.
+
+`diagrama.png` se obtiene del SVG con:
+
+```bash
+chromium --headless --screenshot=diagrama.png --window-size=1440,700 \
+  --hide-scrollbars file://$PWD/../informe/diagrama.svg
+```
+
+## Regenerar el PDF
 
 ```bash
 cd docs/presentacion
