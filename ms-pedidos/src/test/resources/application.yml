@@ -1,0 +1,25 @@
+# Configuracion exclusiva de las pruebas.
+#
+# Sin esto, los tests heredan el datasource de produccion e intentan conectarse
+# a un MySQL en localhost: pasaban solo si el contenedor de desarrollo estaba
+# levantado, y fallaban en cualquier otra maquina. Una base en memoria los hace
+# reproducibles y no exige infraestructura para clonar el repositorio y probar.
+spring:
+  datasource:
+    url: jdbc:h2:mem:pruebas;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+seguridad:
+  emisores: https://login.microsoftonline.com/tenant-de-prueba/v2.0
+  audiencias: ""
+  origenes-cors: http://localhost:4200
+  # Vacio: las pruebas no simulan el paso por el API Gateway
+  secreto-gateway: ""
