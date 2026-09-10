@@ -4,56 +4,33 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
-import com.nimbusds.jose.proc.SecurityContext;
-
+/**
+ * Configuracion de seguridad de ms-auth.
+ *
+ * El servicio dejo de ser un Identity Provider: la identidad la administra
+ * Microsoft Entra ID. Lo que queda es un BFF con dos endpoints publicos, de modo
+ * que no hay validacion de token que hacer aqui.
+ *
+ * El registro es anonimo por necesidad: quien crea su cuenta todavia no tiene
+ * ninguna y por lo tanto no puede presentar un token. Quien si controla el
+ * acceso es {@link FiltroOrigenGateway}, que exige que la peticion venga del
+ * API Gateway.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    private final ClaveService claves;
-
-    public SecurityConfig(ClaveService claves) {
-        this.claves = claves;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    /**
-     * El propio IdP valida sus tokens con su llave publica, sin salir por red:
-     * el JWKS se lee en memoria en lugar de descargarse de si mismo.
-     */
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder
-                .withJwkSource(new ImmutableJWKSet<SecurityContext>(claves.jwks())::get)
-                .build();
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(rutas -> rutas
-                        // El login y los metadatos OIDC deben ser publicos: AWS API
-                        // Gateway descarga el discovery y el JWKS sin presentar token.
-                        .requestMatchers("/auth/login",
-                                // Quien se registra todavia no tiene cuenta y por
-                                // lo tanto no puede presentar ningun token.
-                                "/auth/registro",
-                                "/.well-known/**",
-                                "/api/v1/estado").permitAll()
-                        .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())));
+                        .requestMatchers("/auth/registro", "/api/v1/estado").permitAll()
+                        // Cualquier otra ruta se rechaza: no hay mas superficie
+                        // que la que se declara arriba.
+                        .anyRequest().denyAll());
         return http.build();
     }
 }

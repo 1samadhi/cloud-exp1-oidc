@@ -103,14 +103,17 @@ Entra ID.
 
 ### Sobre el Identity Provider propio
 
-El repositorio incluye un IdP OIDC construido durante el desarrollo, visible en
-los commits `V2.0.0` en adelante. Sirvio para levantar y probar toda la cadena
-(rutas, CORS, autorizador, resource servers) antes de que existiera el tenant.
+Durante el desarrollo se construyo un IdP OIDC completo, con firma RS256 y su
+propio JWKS, visible en los commits `V2.0.0` en adelante. Sirvio para levantar y
+probar toda la cadena (rutas, CORS, autorizador, resource servers) antes de que
+existiera el tenant de Azure.
 
-Quedo **retirado** en `V8.1.0`: sus rutas ya no se publican en el gateway, su
-emisor no figura entre los confiables y arranca sin ningun usuario. Mantenerlo
-activo habria dejado un camino de acceso paralelo y mas debil que el que exige
-la solucion.
+Se retiro de la superficie publica en `V8.1.0` y su codigo se **elimino** en
+`V9.1.0`. Mantenerlo habria dejado un camino de acceso paralelo y mas debil que
+el que exige la solucion. El historial de git lo conserva completo.
+
+`ms-auth` conserva un unico proposito: es el BFF que registra usuarios en el
+tenant a traves de Microsoft Graph.
 
 ### Amazon Cognito
 
@@ -199,8 +202,7 @@ commitea.
 | `PRODUCTOS_URL`            | ms-pedidos          | URL base de ms-productos                     |
 | `DB_HOST` … `DB_PASSWORD`  | productos, pedidos  | Conexion a la base de datos                  |
 | `GRAPH_*`                  | ms-auth             | Credenciales de la app de backend en Entra   |
-| `IDP_USUARIOS`             | ms-auth             | Usuarios del IdP retirado. Vacio en produccion |
-| `SEGURIDAD_SECRETO_GATEWAY`| productos, pedidos  | Cabecera que exige que la peticion venga del gateway |
+| `SEGURIDAD_SECRETO_GATEWAY`| los tres y nginx    | Cabecera que exige que la peticion venga del gateway |
 
 Ver `.env.example`. El archivo `.env` esta en `.gitignore`.
 
