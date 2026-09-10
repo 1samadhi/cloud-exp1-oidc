@@ -273,6 +273,7 @@ claims decodificados y llamar a cada endpoint mostrando la respuesta.
 | `docs/05-base-de-datos.md`    | RDS MySQL, aislamiento de red y esquema       |
 | `docs/06-frontend-angular.md` | Angular, MSAL, guard, interceptor y PKCE      |
 | `docs/evidencias/`            | Capturas y codigos de respuesta del sistema   |
+| `docs/informe/`               | Informe del encargo en PDF y sus fuentes      |
 | `thunder-client/`             | Coleccion y entorno de Thunder Client         |
 | `postman/`                    | La misma coleccion en formato Postman         |
 | `scripts/`                    | Despliegue, pruebas y correccion de la IP      |

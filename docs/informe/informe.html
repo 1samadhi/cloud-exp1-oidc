@@ -1,0 +1,429 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Pedidos360 — Informe del encargo</title>
+<link rel="stylesheet" href="estilo.css">
+</head><body>
+
+<section class="portada">
+  <div class="sigla">DSY1107 · Desarrollo Cloud Native I · Evaluacion Parcial N.º 1 — Encargo</div>
+  <h1>Pedidos360</h1>
+  <div class="sub">Arquitectura cloud-native multi-nube con OAuth 2.0 y OpenID Connect</div>
+  <div class="meta">
+    <div><b>Estudiante</b><span>Ismael Oyarzun Montiel</span></div>
+    <div><b>Correo</b><span>isma.oyarzun@duocuc.cl</span></div>
+    <div><b>Backend</b><span>github.com/1samadhi/cloud-exp1-oidc</span></div>
+    <div><b>Frontend</b><span>github.com/1samadhi/cloud-exp1-front-angular</span></div>
+    <div><b>Sistema</b><span>j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo</span></div>
+    <div><b>Identidad</b><span>Microsoft Entra ID — tenant Pedidos360</span></div>
+  </div>
+</section>
+
+<h2>1. Resumen</h2>
+<p>Pedidos360 es una tienda digital construida como sistema <b>multi-nube</b>: la identidad la
+administra <b>Microsoft Entra ID</b> en Azure y el computo vive en <b>AWS</b>, tras un API Gateway
+que actua como unico punto de entrada y valida cada token antes de dejarlo pasar.</p>
+
+<p>Las dos nubes no comparten red ni credenciales. El unico puente entre ellas es el <b>JWKS</b>:
+una URL publica desde la que AWS descarga las llaves con que verificar las firmas que emite Azure.
+No hay VPN, ni base de datos compartida, ni relacion de confianza configurada entre proveedores;
+solo criptografia de llave publica.</p>
+
+<div class="destacado">
+<p><b>Estado verificado.</b> 20 de 20 comprobaciones de humo contra el despliegue, 10 pruebas
+unitarias en el backend, y 9 de 9 comprobaciones del flujo de inicio de sesion, incluida la que
+demuestra PKCE. Las evidencias del capitulo 9 se generan con scripts del propio repositorio, de
+modo que cualquiera puede rehacerlas.</p>
+</div>
+
+<h2>2. Arquitectura</h2>
+<figure>
+  <img src="diagrama.svg" alt="Diagrama de arquitectura">
+  <figcaption>El token nace en Azure, se valida en el borde de AWS y se vuelve a validar dentro de
+  cada microservicio.</figcaption>
+</figure>
+
+<p>El recorrido de una peticion cualquiera:</p>
+<ol>
+<li>El navegador inicia sesion contra Entra ID con <b>Authorization Code + PKCE</b> y recibe un JWT.</li>
+<li>MSAL adjunta ese token en cada llamada a la API, segun el mapa de recursos protegidos.</li>
+<li>El API Gateway verifica la firma contra el JWKS de Azure y rechaza en el borde lo que no cuadre.</li>
+<li>La peticion llega a la EC2 con una cabecera secreta que solo el gateway inyecta.</li>
+<li>El microservicio <b>vuelve a validar</b> el token y comprueba rol y scope antes de responder.</li>
+</ol>
+
+<h2>3. Componentes</h2>
+
+<table>
+<thead><tr><th>Componente</th><th>Puerto</th><th>Responsabilidad</th></tr></thead>
+<tbody>
+<tr><td><code>front-angular</code></td><td>80</td><td>Aplicacion de pagina unica en Angular 22 con MSAL</td></tr>
+<tr><td><code>ms-productos</code></td><td>8081</td><td>Catalogo. Resource Server OAuth 2.0</td></tr>
+<tr><td><code>ms-pedidos</code></td><td>8082</td><td>Pedidos. Resource Server con autorizacion por rol y scope</td></tr>
+<tr><td><code>ms-auth</code></td><td>9000</td><td>BFF: registra usuarios en el tenant mediante Microsoft Graph</td></tr>
+<tr><td>Amazon RDS</td><td>3306</td><td>MySQL 8, sin acceso desde Internet</td></tr>
+</tbody>
+</table>
+
+<h3>3.1 Los Resource Server</h3>
+<p><code>ms-productos</code> y <code>ms-pedidos</code> no autentican a nadie: reciben un token y
+verifican firma, emisor, audiencia y vigencia. La lista de emisores confiables es configuracion y
+no codigo, de modo que el validador se elige segun el claim <code>iss</code> del token entrante.</p>
+
+<div class="destacado">
+<p>Esa decision se pago sola: migrar del Identity Provider propio a Entra ID consistio en cambiar
+dos variables de entorno, <b>sin tocar una sola linea de Java</b>. Si la validacion hubiera estado
+cableada a un emisor fijo, habria habido que reescribir los tres servicios.</p>
+</div>
+
+<h3>3.2 Autorizacion por rol y scope</h3>
+<p>El controlador de pedidos distingue los dos ejes de permiso. El <b>scope</b> dice que puede hacer
+la aplicacion; el <b>rol</b> dice quien es la persona:</p>
+<pre>@PreAuthorize("hasAuthority('SCOPE_pedidos.escribir') or hasRole('ADMIN')")
+public ResponseEntity&lt;?&gt; crear(@RequestBody NuevoPedidoDTO peticion,
+                              @AuthenticationPrincipal Jwt jwt) { ... }</pre>
+
+<p>El pedido se asocia al claim <code>sub</code> del token y nunca a un campo que envie el cliente,
+de modo que nadie puede crear ni consultar pedidos a nombre de otro.</p>
+
+<h3>3.3 Comunicacion entre microservicios</h3>
+<p>Al crear un pedido, <code>ms-pedidos</code> valida la existencia del producto llamando por HTTP a
+<code>ms-productos</code> y <b>reenviando el token del usuario</b>. La identidad viaja entre
+servicios en lugar de confiar ciegamente en el llamador interno, asi que el servicio de catalogo
+sigue aplicando sus propias reglas aunque la peticion venga de otro microservicio.</p>
+
+<h3>3.4 ms-auth como BFF</h3>
+<p>El enunciado establece que el microservicio de identidad lo administra el tenant de Azure, asi que
+no hay que programarlo. Pero la evaluacion pide ademas que los usuarios puedan <b>crear su cuenta
+desde el frontend</b>, y un tenant de Entra ID gratuito no ofrece autoservicio de registro.</p>
+
+<p>La solucion fue convertir <code>ms-auth</code> en un <b>Backend For Frontend</b>: recibe el
+formulario y crea el usuario en el tenant a traves de Microsoft Graph, usando el flujo
+<code>client_credentials</code> con permisos de aplicacion y consentimiento de administrador. El
+navegador no podria hacerlo por si mismo, porque tendria que exponer un secreto de cliente y el
+JavaScript de una aplicacion de pagina unica es publico.</p>
+
+<h2>4. Identidad: Microsoft Entra ID</h2>
+
+<table>
+<thead><tr><th>Dato</th><th>Valor</th></tr></thead>
+<tbody>
+<tr><td>Tenant</td><td>Pedidos360 — <code>pedidos360ismaoyarzun.onmicrosoft.com</code></td></tr>
+<tr><td>Emisor</td><td><code>https://login.microsoftonline.com/&lt;tenant&gt;/v2.0</code></td></tr>
+<tr><td>Aplicacion</td><td>Pedidos360 SPA, tipo de cuenta: solo este directorio</td></tr>
+<tr><td>Scopes</td><td><code>productos.leer</code>, <code>pedidos.escribir</code></td></tr>
+<tr><td>Roles</td><td><code>ADMIN</code>, <code>USER</code></td></tr>
+<tr><td>Version del token</td><td>2</td></tr>
+</tbody>
+</table>
+
+<h3>4.1 Por que las redirecciones son de tipo SPA</h3>
+<p>Es la decision mas facil de equivocar y la que no da ningun error evidente. Registrando las URI de
+redireccion como <b>Web</b>, Azure asume que existe un backend capaz de guardar un secreto y exige
+<code>client_secret</code> al canjear el codigo. Registrandolas como <b>SPA</b>, Azure habilita
+Authorization Code con PKCE, que es lo que corresponde a un cliente publico.</p>
+
+<h3>4.2 Version 2 de los tokens</h3>
+<p>Por defecto Entra emite tokens v1, con emisor <code>sts.windows.net</code>, un formato heredado.
+Con <code>requestedAccessTokenVersion: 2</code> el emisor pasa a
+<code>login.microsoftonline.com/&lt;tenant&gt;/v2.0</code>, que es el que espera MSAL, el que publica
+descubrimiento OIDC estandar y el que el autorizador de AWS puede consultar.</p>
+
+<h3>4.3 Claims de un token emitido</h3>
+<pre>"iss":   "https://login.microsoftonline.com/5cb85dc6-.../v2.0"
+"aud":   "c483f102-da2d-41b5-b48e-26e7ca78ab98"
+"sub":   "a_2SyIjVm22xKmjUXc-Hiz7_MhB_ZMNet3Fukec7GU8"
+"scp":   "pedidos.escribir productos.leer"
+"roles": ["USER", "ADMIN"]
+"ver":   "2.0"</pre>
+<p class="nota">Entra usa <code>scp</code> para los scopes, mientras otros proveedores usan
+<code>scope</code>. El convertidor de autoridades lee ambos, y por eso el mismo codigo sirvio para
+tres emisores distintos durante el desarrollo.</p>
+
+<h2>5. Capa perimetral: AWS API Gateway</h2>
+
+<h3>5.1 Rutas limpias y versionadas</h3>
+<p>La ruta publica no es la misma que expone el microservicio. El gateway traduce:</p>
+<table>
+<thead><tr><th>Ruta publica</th><th>Destino interno</th><th>Autorizador</th></tr></thead>
+<tbody>
+<tr><td><code>GET /v1/productos</code></td><td><code>:8081/api/v1/productos</code></td><td>Entra ID</td></tr>
+<tr><td><code>GET /v1/productos/{id}</code></td><td><code>:8081/api/v1/productos/{id}</code></td><td>Entra ID</td></tr>
+<tr><td><code>GET /v1/productos/quien-soy</code></td><td><code>:8081/api/v1/productos/quien-soy</code></td><td>Entra ID</td></tr>
+<tr><td><code>GET /v1/pedidos</code></td><td><code>:8082/api/v1/pedidos</code></td><td>Entra ID</td></tr>
+<tr><td><code>POST /v1/pedidos</code></td><td><code>:8082/api/v1/pedidos</code></td><td>Entra ID</td></tr>
+<tr><td><code>GET /v1/pedidos/todos</code></td><td><code>:8082/api/v1/pedidos/todos</code></td><td>Entra ID</td></tr>
+<tr><td><code>GET /v1/public</code></td><td><code>:8081/api/v1/public</code></td><td>abierta</td></tr>
+<tr><td><code>POST /auth/registro</code></td><td><code>:9000/auth/registro</code></td><td>abierta</td></tr>
+<tr><td><code>GET /</code> y <code>GET /{proxy+}</code></td><td><code>:80</code> (nginx)</td><td>abierta</td></tr>
+</tbody>
+</table>
+
+<p>Separar ambas cosas es lo que aporta un API Manager: la version vive en la ruta publica, de modo
+que publicar una <code>v2</code> es apuntar <code>GET /v2/productos</code> a otra integracion sin que
+los clientes de <code>v1</code> se enteren ni los microservicios tengan que coordinar sus rutas
+internas.</p>
+
+<p class="nota">Al elegir la ruta, API Gateway prefiere los segmentos literales sobre las variables:
+<code>/v1/productos/quien-soy</code> gana sobre <code>/v1/productos/{id}</code>, asi que
+"quien-soy" no se interpreta como un identificador.</p>
+
+<h3>5.2 CORS</h3>
+<p>Configurado en el API Manager con origenes explicitos y no con comodin, y solo con los metodos y
+cabeceras que la aplicacion necesita. El preflight desde el dominio del frontend responde con la
+cabecera <code>access-control-allow-origin</code>; desde cualquier otro origen responde sin ella, con
+lo que el navegador bloquea la llamada.</p>
+
+<h3>5.3 Autorizador JWT</h3>
+<p>Un autorizador de tipo JWT apuntado al emisor de Entra ID. AWS descarga por su cuenta el JWKS que
+anuncia el descubrimiento de Azure y verifica firma, vigencia, emisor y audiencia antes de reenviar
+la peticion. Lo que no cuadra se rechaza en el borde y nunca llega a la instancia.</p>
+
+<p class="nota">Un autorizador JWT admite un unico emisor. Por eso la capacidad de validar varios
+emisores vive en los microservicios y no en el gateway.</p>
+
+<h3>5.4 Punto de entrada unico</h3>
+<p>El enunciado exige que el API Gateway sea el unico punto de entrada. La instancia EC2, sin
+embargo, tiene IP publica y expone los puertos de cada servicio, de modo que una llamada directa
+podria saltarse el gateway y su autorizador por completo.</p>
+
+<p>El gateway inyecta la cabecera <code>X-Origen-Gateway</code> en cada integracion, y un filtro
+rechaza con 403 toda peticion que llegue sin ella. Ese filtro se registra con la precedencia mas
+alta, antes que la cadena de Spring Security, para que el trafico ajeno ni siquiera llegue a la
+validacion del token.</p>
+
+<div class="destacado limite">
+<p><b>Lo que esta medida no es.</b> No es aislamiento de red y no conviene defenderla como tal: quien
+conozca el secreto puede seguir llamando directamente, y el secreto viaja en claro entre el gateway y
+la instancia porque la integracion es HTTP. La arquitectura correcta seria una subred privada con
+VPC Link, que exige un balanceador y cuesta del orden de USD 16 mensuales, fuera del presupuesto de
+la cuenta academica. Lo que se consigue es que el gateway sea el unico camino <i>funcional</i> y que
+las reglas del borde no se puedan eludir.</p>
+</div>
+
+<h2 class="pagina">6. Persistencia</h2>
+<p>El catalogo y los pedidos viven en <b>Amazon RDS MySQL 8</b>, integrado mediante entidades JPA,
+repositorios de Spring Data y propiedades de conexion por variables de entorno. El mismo artefacto
+apunta al contenedor local en desarrollo y al endpoint del RDS en AWS; solo cambia
+<code>DB_HOST</code>.</p>
+
+<h4>Aislamiento de red</h4>
+<p>La instancia no tiene IP publica. La unica regla de entrada abre el puerto 3306 <b>hacia el
+security group de la EC2</b>, no hacia un rango de direcciones. Esa distincion importa: la IP publica
+de la instancia cambia cada vez que se reinicia el laboratorio, y una regla por direccion habria que
+corregirla en cada arranque.</p>
+
+<h4>Esquema</h4>
+<pre>productos                        pedidos
+  id       bigint PK               id           bigint PK
+  nombre   varchar(120)            cantidad     int
+  precio   int                     cliente      varchar(200)  indexado
+                                   creado       datetime(6)
+                                   producto_id  bigint</pre>
+
+<p><code>pedidos.cliente</code> guarda el claim <code>sub</code> del token. No hay clave foranea
+hacia <code>productos</code>: son microservicios distintos y cada uno es dueño de sus datos; una
+clave foranea los acoplaria a compartir esquema. La existencia del producto se valida por HTTP,
+como se describe en 3.3.</p>
+
+<h4>Usuarios</h4>
+<p>Los microservicios usan un usuario con permisos unicamente sobre su esquema, nunca el usuario
+maestro de la instancia. Si alguno se viera comprometido, el atacante no podria crear usuarios ni
+tocar otras bases.</p>
+
+<h2>7. Seguridad en profundidad</h2>
+<p>Cada peticion se autoriza dos veces, en el borde y dentro del servicio. La duplicacion es
+deliberada: el gateway protege el perimetro, no el servidor.</p>
+
+<table>
+<thead><tr><th>Situacion</th><th>Codigo</th><th>Quien responde</th></tr></thead>
+<tbody>
+<tr><td>Token valido y permisos suficientes</td><td class="ok">200</td><td>el microservicio</td></tr>
+<tr><td>Sin token, o token invalido o expirado</td><td class="no">401</td><td>autorizador del API Gateway</td></tr>
+<tr><td>Token valido pero sin el rol o el scope</td><td class="no">403</td><td>Spring Security</td></tr>
+<tr><td>Peticion que no viene del gateway</td><td class="no">403</td><td>filtro de origen</td></tr>
+</tbody>
+</table>
+
+<p>La distincion entre 401 y 403 no es cosmetica: el primero significa <i>no se quien eres</i> y el
+segundo <i>se quien eres y no puedes</i>. <code>GET /v1/pedidos/todos</code> existe para demostrarlo:
+exige el rol <code>ADMIN</code>, de modo que el usuario <code>cliente</code> recibe 403 con un token
+perfectamente valido.</p>
+
+<h2>8. Decisiones de diseño</h2>
+
+<h3>8.1 Validacion configurable por emisor</h3>
+<p>Los Resource Server aceptan una lista de emisores y eligen el validador segun el claim
+<code>iss</code>, normalizando los permisos de cada proveedor a un mismo vocabulario. Durante el
+desarrollo eso permitio tener funcionando un Identity Provider propio, Amazon Cognito y Entra ID a la
+vez, y migrar entre ellos sin recompilar.</p>
+
+<h3>8.2 Retiro del Identity Provider propio</h3>
+<p>Se construyo un IdP OIDC completo, con firma RS256 y su propio JWKS, para entender el protocolo y
+para levantar y probar toda la cadena antes de que existiera el tenant de Azure. Una vez que Entra ID
+paso a ser el proveedor del sistema, ese IdP se retiro y despues <b>se elimino</b>.</p>
+
+<p>El motivo no fue de limpieza sino de seguridad: sus credenciales de prueba estaban escritas en el
+codigo de un repositorio publico y su endpoint de login estaba expuesto sin autorizador. Mantenerlo
+habria dejado un camino de acceso paralelo y mas debil que el que exige la solucion. El historial de
+git lo conserva completo.</p>
+
+<h3>8.3 Frontend sin manipulacion de tokens</h3>
+<p>Ningun servicio del frontend toca la cabecera <code>Authorization</code>. El
+<code>protectedResourceMap</code> declara que scope corresponde a cada URL y el
+<code>MsalInterceptor</code> obtiene el token, lo renueva si expiro y lo adjunta:</p>
+<pre>mapa.set(`${api}/v1/productos`,   [SCOPES.productosLeer]);
+mapa.set(`${api}/v1/productos/*`, [SCOPES.productosLeer]);
+mapa.set(`${api}/v1/pedidos`,     [SCOPES.pedidosEscribir]);
+mapa.set(`${api}/v1/pedidos/*`,   [SCOPES.pedidosEscribir]);</pre>
+<p class="nota">La coincidencia es exacta y no por prefijo. Las entradas con comodin se declaran por
+recurso y no como <code>/v1/*</code>, porque <code>/v1/public</code> debe seguir viajando sin token.</p>
+
+<h2 class="pagina">9. Evidencias</h2>
+<p>Generadas por scripts del repositorio y no a mano, de modo que se pueden rehacer en cualquier
+momento: <code>scripts/verificar-pkce.mjs</code> y <code>scripts/capturar-codigos.sh</code>.</p>
+
+<h3>9.1 Authorization Code con PKCE</h3>
+<p>Que el inicio de sesion funcione no demuestra PKCE: un flujo implicito tambien iniciaria sesion.
+Lo que lo demuestra es la peticion al endpoint de autorizacion, interceptada durante el login:</p>
+<pre>https://login.microsoftonline.com/5cb85dc6-.../oauth2/v2.0/authorize
+
+response_type         = code
+code_challenge        = wKgfDWE2Xsjbnw0Vb50XLGrTVfQYtl9D9VRU-B1J_qk
+code_challenge_method = S256
+redirect_uri          = https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo/</pre>
+
+<p>El navegador genera un <code>code_verifier</code> al azar, envia solo su hash SHA-256 como
+<code>code_challenge</code>, y presenta el original al canjear el codigo. Un codigo interceptado no
+sirve sin el verifier. No aparece ningun <code>client_secret</code>, y no puede aparecer: esa es
+exactamente la razon de ser de PKCE.</p>
+
+<figure>
+  <img src="EV_02" alt="Inicio de sesion en Microsoft">
+  <figcaption><b>Figura 1.</b> Redireccion a Microsoft Entra ID desde la aplicacion.</figcaption>
+</figure>
+
+<h3>9.2 La aplicacion en funcionamiento</h3>
+<figure>
+  <img src="EV_05" alt="Catalogo de productos">
+  <figcaption><b>Figura 2.</b> Catalogo servido por ms-productos desde RDS. El token viaja
+  automaticamente: el interceptor lo adjunta porque la URL esta declarada en el mapa de recursos
+  protegidos.</figcaption>
+</figure>
+
+<figure>
+  <img src="EV_07" alt="Claims del token">
+  <figcaption><b>Figura 3.</b> Los tres angulos del mismo inicio de sesion: el <code>id_token</code>
+  con la identidad, el <code>access_token</code> con <code>scp</code> y <code>roles</code>, y la
+  respuesta del microservicio tras validar la firma.</figcaption>
+</figure>
+
+<h3 class="pagina">9.3 Codigos de respuesta</h3>
+<pre>== 200: peticion autorizada ==
+  GET  /v1/productos            con token de Entra      -> 200
+  POST /v1/pedidos              con token de Entra      -> 201
+  GET  /v1/public               sin token, ruta abierta -> 200
+
+== 401: el autorizador del API Gateway rechaza en el borde ==
+  GET  /v1/productos            sin token               -> 401
+  GET  /v1/productos            token inventado         -> 401
+  GET  /v1/pedidos              sin token               -> 401
+
+== 403: token valido, pero sin permiso ==
+  GET  /v1/pedidos/todos        admin, rol ADMIN        -> 200
+  GET  /v1/pedidos/todos        cliente, solo USER      -> 403
+
+== 403: el API Gateway es el unico punto de entrada ==
+  http://IP:8081/api/v1/productos   con token           -> 403
+  http://IP:8082/api/v1/pedidos     con token           -> 403
+  http://IP:9000/api/v1/estado      con token           -> 403
+  http://IP:80/                     (frontend)          -> 403
+
+== CORS: solo el dominio del frontend ==
+  OPTIONS /v1/productos  Origin del frontend            -> permitido
+  OPTIONS /v1/productos  Origin desconocido             -> bloqueado</pre>
+
+<h3>9.4 Pruebas</h3>
+<table>
+<thead><tr><th>Bateria</th><th>Alcance</th><th>Resultado</th></tr></thead>
+<tbody>
+<tr><td>Unitarias (JUnit)</td><td>Controladores de productos y pedidos, con base en memoria</td><td class="ok">10 / 10</td></tr>
+<tr><td>Humo (<code>probar-endpoints.sh</code>)</td><td>Todas las rutas contra el despliegue real</td><td class="ok">20 / 20</td></tr>
+<tr><td>Inicio de sesion (<code>verificar-pkce.mjs</code>)</td><td>Flujo PKCE completo en navegador</td><td class="ok">9 / 9</td></tr>
+<tr><td>Coleccion Thunder Client</td><td>13 peticiones con aserciones de codigo HTTP</td><td class="ok">13 / 13</td></tr>
+</tbody>
+</table>
+
+<h2>10. Limitaciones asumidas</h2>
+<p>Se documentan de forma explicita porque conocer los limites de una solucion forma parte de
+haberla diseñado.</p>
+
+<h4>Punto de entrada unico por cabecera compartida</h4>
+<p>Descrito en 5.4. Mitigacion consciente frente a una restriccion de presupuesto, no aislamiento de
+red.</p>
+
+<h4>Permisos de aplicacion mas amplios de lo necesario</h4>
+<p><code>ms-auth</code> tiene <code>AppRoleAssignment.ReadWrite.All</code> sobre Microsoft Graph para
+poder asignar el rol <code>USER</code> a los usuarios que registra. Ese permiso permite asignar
+cualquier otro permiso, de modo que es un vector conocido de escalada de privilegios. Graph no ofrece
+uno mas acotado para asignar roles de la propia aplicacion, asi que es el minimo disponible, no el
+minimo deseable.</p>
+
+<h4>Tenant de tipo workforce en lugar de External ID</h4>
+<p>El material de la asignatura indica crear un tenant <b>Entra External ID</b>, la variante CIAM que
+trae registro de usuarios en autoservicio. No fue posible, y la causa quedo comprobada: el recurso
+<code>ciamDirectories</code> solo admite las ubicaciones <code>unitedstates, europe, asiapacific,
+australia, japan</code>, mientras que la suscripcion Azure for Students restringe los despliegues a
+<code>brazilsouth, westus3, centralus, canadacentral, southafricanorth</code>. La interseccion es
+vacia, y la restriccion es una asignacion de politica <b>de sistema</b> que ni un propietario de la
+suscripcion puede eximir.</p>
+<p>El registro de usuarios se implemento entonces contra Microsoft Graph, como se describe en 3.4.</p>
+
+<h4>Security Defaults desactivado en el tenant</h4>
+<p>El tenant venia con Security Defaults activo, que obliga a registrar MFA en el primer inicio de
+sesion interactivo sin ofrecer opcion de omitir. Se desactivo para poder demostrar el flujo. En un
+entorno real se sustituiria por politicas de acceso condicional, no se dejaria sin nada.</p>
+
+<h2>11. Repositorios y versionado</h2>
+<p>El sistema se entrega en dos repositorios, uno por componente, ambos publicos y con su propio
+historial de versiones semanticas.</p>
+
+<table>
+<thead><tr><th>Repositorio</th><th>Contenido</th><th>Commits</th></tr></thead>
+<tbody>
+<tr><td><code>cloud-exp1-oidc</code></td><td>Microservicios, orquestacion, scripts y documentacion</td><td>32</td></tr>
+<tr><td><code>cloud-exp1-front-angular</code></td><td>Aplicacion Angular con MSAL</td><td>8</td></tr>
+</tbody>
+</table>
+
+<p>El historial del backend recorre la evolucion completa del sistema, y los saltos de version mayor
+marcan los cambios que rompen compatibilidad:</p>
+
+<table>
+<thead><tr><th>Version</th><th>Hito</th></tr></thead>
+<tbody>
+<tr><td><code>V1.0.0</code></td><td>Microservicios base</td></tr>
+<tr><td><code>V2.0.0</code></td><td>Identity Provider propio con OIDC y firma RS256</td></tr>
+<tr><td><code>V3.1.0</code></td><td>Contenerizacion y despliegue en EC2 tras el API Gateway</td></tr>
+<tr><td><code>V4.0.0</code></td><td>Persistencia con JPA: los servicios ya no arrancan sin base de datos</td></tr>
+<tr><td><code>V5.0.0</code></td><td>Rutas limpias y versionadas: cambia la URL publica de la API</td></tr>
+<tr><td><code>V6.0.0</code></td><td>Entra ID como Identity as a Service del sistema</td></tr>
+<tr><td><code>V7.0.0</code></td><td>Frontend Angular con MSAL y registro de usuarios via Graph</td></tr>
+<tr><td><code>V8.0.0</code></td><td>Separacion en repositorios por componente</td></tr>
+<tr><td><code>V9.0.0</code></td><td>El API Gateway pasa a ser el unico punto de entrada</td></tr>
+<tr><td><code>V9.1.0</code></td><td>Eliminacion del Identity Provider propio</td></tr>
+</tbody>
+</table>
+
+<h4>Documentacion incluida en el repositorio</h4>
+<table>
+<thead><tr><th>Documento</th><th>Contenido</th></tr></thead>
+<tbody>
+<tr><td><code>docs/02-entra-id.md</code></td><td>Tenant, aplicacion, scopes, roles y PKCE, con los comandos exactos</td></tr>
+<tr><td><code>docs/03-api-gateway.md</code></td><td>Rutas, autorizador, CORS y punto de entrada unico</td></tr>
+<tr><td><code>docs/04-despliegue-ec2.md</code></td><td>La instancia, SSM y el control de costos</td></tr>
+<tr><td><code>docs/05-base-de-datos.md</code></td><td>RDS, aislamiento de red y esquema</td></tr>
+<tr><td><code>docs/06-frontend-angular.md</code></td><td>Angular, MSAL, guard, interceptor y PKCE</td></tr>
+<tr><td><code>docs/evidencias/</code></td><td>Capturas y codigos de respuesta, con su procedimiento</td></tr>
+</tbody>
+</table>
+
+</body></html>

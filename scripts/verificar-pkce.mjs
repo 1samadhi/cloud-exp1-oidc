@@ -114,6 +114,10 @@ try {
   // ---- el flujo de login ----
   await pagina.getByRole('button', { name: /Iniciar sesion con Microsoft/i }).click();
   await pagina.waitForURL(/login\.microsoftonline\.com/, { timeout: 60000 });
+  // Sin esperar al formulario, la captura sale en blanco: la URL cambia antes
+  // de que Microsoft termine de pintar la pagina.
+  await pagina.waitForSelector('input[type="email"]', { state: 'visible', timeout: 30000 });
+  await pagina.waitForTimeout(1200);
   await pagina.screenshot({ path: join(EVIDENCIAS, '02-login-microsoft.png'), fullPage: true });
 
   // ---- lo que demuestra PKCE ----

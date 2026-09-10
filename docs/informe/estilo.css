@@ -1,0 +1,55 @@
+@page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+
+:root{
+  --tinta:#14161c; --suave:#5b6270; --linea:#d9dde4;
+  --acento:#1f4fd8; --ok:#1a7f4b; --alerta:#b2521a; --fondo:#f6f7f9;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; color:var(--tinta); background:#fff;
+  font:10.5pt/1.55 "Source Serif 4","Georgia",serif;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+h1,h2,h3,h4{font-family:"Inter","Helvetica Neue",Arial,sans-serif;line-height:1.25;margin:0}
+h2{font-size:15pt;margin:26pt 0 8pt;padding-bottom:5pt;border-bottom:1.5pt solid var(--tinta);break-after:avoid}
+h3{font-size:11.5pt;margin:16pt 0 5pt;break-after:avoid}
+h4{font-size:10pt;margin:12pt 0 3pt;color:var(--suave);text-transform:uppercase;letter-spacing:.06em;break-after:avoid}
+p{margin:0 0 8pt}
+ul,ol{margin:0 0 8pt;padding-left:16pt}
+li{margin-bottom:3pt}
+code{font-family:"JetBrains Mono","DejaVu Sans Mono",monospace;font-size:8.8pt;background:var(--fondo);padding:.5pt 3pt;border-radius:2pt}
+pre{font-family:"JetBrains Mono","DejaVu Sans Mono",monospace;font-size:8pt;line-height:1.45;
+    background:var(--fondo);border:.5pt solid var(--linea);border-left:2.5pt solid var(--acento);
+    border-radius:3pt;padding:8pt 10pt;overflow:hidden;white-space:pre-wrap;margin:0 0 10pt;break-inside:avoid}
+table{width:100%;border-collapse:collapse;font-size:9pt;margin:0 0 10pt;break-inside:avoid}
+th{text-align:left;font-family:"Inter",Arial,sans-serif;font-size:8pt;text-transform:uppercase;
+   letter-spacing:.05em;color:var(--suave);border-bottom:1pt solid var(--tinta);padding:4pt 6pt 3pt}
+td{padding:4pt 6pt;border-bottom:.5pt solid var(--linea);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+
+.portada{height:247mm;display:flex;flex-direction:column;justify-content:center;break-after:page}
+.portada .sigla{font-family:"Inter",Arial,sans-serif;font-size:9pt;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--suave);margin-bottom:10pt}
+.portada h1{font-size:34pt;letter-spacing:-.02em;margin-bottom:4pt}
+.portada .sub{font-size:13pt;color:var(--suave);margin-bottom:26pt;font-family:"Inter",Arial,sans-serif}
+.portada .meta{border-top:1.5pt solid var(--tinta);padding-top:12pt;font-size:9.5pt}
+.portada .meta div{display:flex;gap:10pt;margin-bottom:4pt}
+.portada .meta b{font-family:"Inter",Arial,sans-serif;font-weight:600;min-width:112pt;font-size:8.5pt;
+  text-transform:uppercase;letter-spacing:.05em;color:var(--suave)}
+
+.destacado{background:var(--fondo);border-radius:4pt;padding:10pt 12pt;margin:0 0 12pt;break-inside:avoid;
+  border-left:2.5pt solid var(--acento)}
+.destacado p:last-child{margin-bottom:0}
+.nota{font-size:9pt;color:var(--suave);font-style:italic}
+.limite{border-left-color:var(--alerta)}
+
+figure{margin:0 0 14pt;break-inside:avoid}
+figure img{max-width:100%;max-height:205mm;width:auto;height:auto;
+  border:.5pt solid var(--linea);border-radius:3pt;display:block;margin:0 auto}
+figcaption{font-size:8.5pt;color:var(--suave);margin-top:4pt;font-family:"Inter",Arial,sans-serif}
+figcaption b{color:var(--tinta)}
+
+.ok{color:var(--ok);font-weight:600}
+.no{color:var(--alerta);font-weight:600}
+.pagina{break-before:page}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:12pt}
