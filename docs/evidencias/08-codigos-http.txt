@@ -1,5 +1,5 @@
 Codigos de respuesta del sistema Pedidos360
-Capturado por scripts/capturar-codigos.sh el 2026-09-10T14:09:18Z
+Capturado por scripts/capturar-codigos.sh el 2026-09-10T14:56:19Z
 Stage: https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo
 
 == 200: peticion autorizada ==

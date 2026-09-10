@@ -182,7 +182,9 @@ try {
     ['pedidos', '06-pedidos.png'],
     ['perfil', '07-claims-del-token.png']
   ]) {
-    await pagina.getByRole('link', { name: new RegExp(ruta, 'i') }).first().click();
+    // Se navega por el destino del enlace y no por su texto: la etiqueta
+    // visible puede cambiar ("Mi token" apunta a /perfil) y romperia el script.
+    await pagina.locator(`a[href$="/${ruta}"]`).first().click();
     await pagina.waitForLoadState('networkidle');
     await pagina.waitForTimeout(1500);
     await pagina.screenshot({ path: join(EVIDENCIAS, archivo), fullPage: true });

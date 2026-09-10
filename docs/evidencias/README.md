@@ -15,6 +15,10 @@ IP_EC2=<ip> EXP1_URL=<stage> ./scripts/capturar-codigos.sh
 | `01-inicio.png`                | La aplicacion servida por el API Gateway             |
 | `02-login-microsoft.png`       | Redireccion a Entra ID para iniciar sesion           |
 | `03-peticion-authorize.txt`    | **Authorization Code con PKCE**                      |
+| `04-sesion-iniciada.png`       | Sesion activa tras volver de Microsoft                |
+| `05-catalogo.png`              | Productos servidos desde RDS con el token adjunto    |
+| `06-pedidos.png`               | Pedidos del usuario del token                        |
+| `07-claims-del-token.png`      | id_token, access_token y lo que ve el microservicio  |
 | `08-codigos-http.txt`          | 200, 401 y 403 coherentes, y el punto de entrada unico |
 
 ## Sobre PKCE
@@ -33,24 +37,14 @@ No aparece ningun `client_secret`, y no puede aparecer: el JavaScript de una
 aplicacion de pagina unica es publico. Esa es exactamente la razon de ser de
 PKCE.
 
-## Capturas del recorrido con sesion iniciada
+## Sobre Security Defaults
 
-Faltan las de `/catalogo`, `/pedidos` y `/perfil` con la sesion abierta. El
-script se detiene antes porque el tenant tiene **Security Defaults** activo y
-exige registrar MFA en el primer inicio de sesion interactivo, sin opcion de
-omitir.
+El tenant venia con **Security Defaults** activo, que obliga a registrar MFA en
+el primer inicio de sesion interactivo y no ofrece opcion de omitir. Se
+desactivo desde el portal para poder demostrar el flujo.
 
-Es una politica del directorio, no un fallo del sistema, y conviene resolverla
-antes de cualquier demostracion en vivo:
-
-- **Desactivar Security Defaults**: `entra.microsoft.com` → Identity →
-  Overview → Properties → Manage security defaults → Disabled.
-- **O registrar MFA** en la cuenta de prueba con Microsoft Authenticator.
-
-Hecho eso, `scripts/verificar-pkce.mjs` completa el recorrido y genera
-`04-sesion-iniciada.png`, `05-catalogo.png`, `06-pedidos.png` y
-`07-claims-del-token.png`.
-
-Detalle util: el flujo de contrasenia (`grant_type=password`) sigue devolviendo
-token, por eso las pruebas automatizadas por HTTP pasan sin tropezar con MFA.
-El muro aparece solo en el inicio de sesion desde el navegador.
+Vale la pena conocer el detalle porque aparece en los codigos de respuesta: el
+flujo de contrasenia (`grant_type=password`) seguia devolviendo token aun con la
+politica activa, asi que las pruebas por HTTP pasaban sin tropezar. El muro
+solo aparecia en el navegador. Desactivarla tambien era necesario para cualquier
+demostracion en vivo: la misma pantalla habria aparecido delante del evaluador.

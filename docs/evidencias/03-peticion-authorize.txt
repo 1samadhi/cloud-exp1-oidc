@@ -1,5 +1,5 @@
 Peticion al endpoint de autorizacion de Microsoft Entra ID
-Capturada por scripts/verificar-pkce.mjs el 2026-09-10T14:07:43.429Z
+Capturada por scripts/verificar-pkce.mjs el 2026-09-10T14:56:07.745Z
 
 https://login.microsoftonline.com/5cb85dc6-a73b-41fc-b2b9-5b2a9b3f531b/oauth2/v2.0/authorize
 
@@ -10,7 +10,7 @@ response_mode = fragment
 clidata = 1
 claims = {"id_token":{"signin_state":{"essential":false},"login_hint":{"essential":false},"tenant_r...
 response_type = code
-code_challenge = wKgfDWE2Xsjbnw0Vb50XLGrTVfQYtl9D9VRU-B1J_qk
+code_challenge = MDX5D49uFrrCroByZ_LooVPnAjDCdo9jbXnKEoyCiJw
 code_challenge_method = S256
 
 code_challenge_method=S256 confirma Authorization Code con PKCE:
