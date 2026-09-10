@@ -223,7 +223,7 @@ parrafo(tf, "Arquitectura cloud-native multi-nube", tam=17, color=CLARO, primero
 parrafo(tf, "con OAuth 2.0 y OpenID Connect", tam=17, color=CLARO)
 
 x = IZQ
-for etiqueta, valor in [("Estudiante", "Ismael Oyarzun Montiel"),
+for etiqueta, valor in [("Estudiantes", "Ismael Oyarzun Montiel\nDiego Villota"),
                         ("Identidad", "Microsoft Entra ID"),
                         ("Computo", "Amazon Web Services")]:
     c = lam.shapes.add_textbox(x, Inches(5.35), Inches(3.4), Inches(0.7))
@@ -231,7 +231,8 @@ for etiqueta, valor in [("Estudiante", "Ismael Oyarzun Montiel"),
     p = tf.paragraphs[0]
     r = p.add_run(); r.text = etiqueta.upper()
     r.font.size = Pt(9); r.font.bold = True; r.font.name = TIPO; r.font.color.rgb = BLANCO
-    parrafo(tf, valor, tam=12, color=CLARO, espacio=0)
+    for i, linea in enumerate(valor.split("\n")):
+        parrafo(tf, linea, tam=12, color=CLARO, espacio=0)
     x += Inches(3.7)
 
 # ─────────────────────────  2. El problema  ─────────────────────
