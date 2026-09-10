@@ -1,0 +1,249 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Pedidos360 — Presentacion</title>
+<link rel="stylesheet" href="estilo.css"></head><body>
+
+<section class="lamina portada">
+  <div class="eyebrow">DSY1107 · Evaluacion Parcial N.º 2</div>
+  <h1>Pedidos360</h1>
+  <div class="sub">Arquitectura cloud-native multi-nube<br>con OAuth 2.0 y OpenID Connect</div>
+  <div class="datos">
+    <div><b>Estudiante</b>Ismael Oyarzun Montiel</div>
+    <div><b>Identidad</b>Microsoft Entra ID</div>
+    <div><b>Computo</b>Amazon Web Services</div>
+  </div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow">El problema</div>
+  <h2>Dos nubes que no se conocen</h2>
+  <p class="grande">La identidad la administra <b>Azure</b>. El computo vive en <b>AWS</b>.
+  No comparten red, ni base de datos, ni credenciales.</p>
+  <p class="grande">El unico puente es el <b>JWKS</b>: una URL publica desde la que AWS descarga
+  las llaves con que verificar las firmas que emite Azure.</p>
+  <p class="grande" style="color:var(--acento);font-weight:600">Solo criptografia de llave publica.</p>
+  <div class="pie"><span>Pedidos360</span><span>1</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow">Arquitectura</div>
+  <div class="diagrama">DIAGRAMA</div>
+  <div class="pie"><span>El token nace en Azure, se valida en el borde de AWS y otra vez dentro de cada microservicio</span><span>2</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow">Componentes</div>
+  <h2>Tres microservicios y un frontend</h2>
+  <table>
+    <thead><tr><th>Componente</th><th>Rol</th></tr></thead>
+    <tbody>
+      <tr><td><code>front-angular</code></td><td>Angular 22 + MSAL. Authorization Code con PKCE</td></tr>
+      <tr><td><code>ms-productos</code></td><td>Catalogo. Resource Server OAuth 2.0</td></tr>
+      <tr><td><code>ms-pedidos</code></td><td>Pedidos. Autorizacion por rol y por scope</td></tr>
+      <tr><td><code>ms-auth</code></td><td>BFF: registra usuarios en el tenant via Microsoft Graph</td></tr>
+      <tr><td>Amazon RDS</td><td>MySQL 8, sin acceso desde Internet</td></tr>
+    </tbody>
+  </table>
+  <div class="pie"><span>Pedidos360</span><span>3</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow demo">Demostracion</div>
+  <h2>El tenant en el IDaaS</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>Tenant <b>Pedidos360</b> en Microsoft Entra ID</li>
+        <li>Usuarios registrados con sus <b>roles</b> asignados</li>
+        <li>Uno de ellos creado desde el propio frontend</li>
+      </ul>
+    </div>
+    <div class="tarjeta">
+      <h3>Entra ID Free</h3>
+      <p>No trae autoservicio de registro. El formulario del frontend llama a
+      <code>ms-auth</code>, que crea la cuenta con Microsoft Graph usando su propio secreto.
+      Una SPA no podria: tendria que exponerlo.</p>
+    </div>
+  </div>
+  <div class="pie"><span>entra.microsoft.com → Users</span><span>4</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow demo">Demostracion</div>
+  <h2>La aplicacion registrada</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>Redirecciones de tipo <b>SPA</b>, con <code>Web</code> vacio</li>
+        <li>Scopes <code>productos.leer</code> y <code>pedidos.escribir</code></li>
+        <li>Roles <code>ADMIN</code> y <code>USER</code></li>
+      </ul>
+    </div>
+    <div class="tarjeta alerta">
+      <h3>La decision que no perdona</h3>
+      <p>Con <code>Web</code>, Azure exige un <code>client_secret</code> que una SPA no puede
+      esconder. Con <code>SPA</code> habilita PKCE. Elegir mal no da ningun error evidente:
+      el login falla recien al canjear el codigo.</p>
+    </div>
+  </div>
+  <div class="pie"><span>App registrations → Pedidos360 SPA</span><span>5</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow demo">Demostracion</div>
+  <h2>Inicio de sesion y token</h2>
+  <p class="grande">Login con Microsoft desde la aplicacion, y en la pagina <b>Mi token</b>:
+  el <code>id_token</code> con la identidad, el <code>access_token</code> con
+  <code>scp</code> y <code>roles</code>, y lo que ve el microservicio tras validar la firma.</p>
+  <div class="tarjeta" style="margin-top:4mm">
+    <p style="color:var(--tinta);font-size:13pt">Un JWT va <b>firmado, no cifrado</b>. Cualquiera
+    puede leer su contenido; nadie puede modificarlo sin invalidar la firma.</p>
+  </div>
+  <div class="pie"><span>La aplicacion consume la API a traves del API Gateway</span><span>6</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow">La prueba de PKCE</div>
+  <h2>Que el login funcione no demuestra PKCE</h2>
+  <p>Un flujo implicito tambien iniciaria sesion. Lo que lo demuestra es la peticion
+  al endpoint de autorizacion:</p>
+  <pre>response_type         = code
+code_challenge        = wKgfDWE2Xsjbnw0Vb50XLGrTVfQYtl9D9VRU-B1J_qk
+code_challenge_method = S256</pre>
+  <p>El navegador inventa un <code>code_verifier</code>, envia solo su hash, y presenta el
+  original al canjear el codigo. Un codigo interceptado no sirve sin el verifier.</p>
+  <div class="pie"><span>Capturado por scripts/verificar-pkce.mjs</span><span>7</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow demo">Demostracion</div>
+  <h2>El API Manager</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>La instancia creada y en funcionamiento</li>
+        <li><b>Rutas limpias</b> con la version en el path publico</li>
+        <li>Una <b>integracion</b> por ruta hacia cada microservicio</li>
+        <li><b>Autorizador JWT</b> apuntado al JWKS de Azure</li>
+      </ul>
+    </div>
+    <div>
+      <pre style="font-size:10.5pt">GET /v1/productos
+   → :8081/api/v1/productos
+
+POST /v1/pedidos
+   → :8082/api/v1/pedidos</pre>
+      <p style="font-size:11.5pt;color:var(--suave);margin-top:3mm">La version vive en la ruta
+      publica: publicar una <code>v2</code> no afecta a los clientes de <code>v1</code>.</p>
+    </div>
+  </div>
+  <div class="pie"><span>API Gateway → Routes · Integrations · Authorization</span><span>8</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow demo">Demostracion</div>
+  <h2>CORS, sin sobrepermisos</h2>
+  <table>
+    <thead><tr><th>Origen de la peticion</th><th>Respuesta del preflight</th></tr></thead>
+    <tbody>
+      <tr><td>El dominio del frontend</td><td class="c200">permitido</td></tr>
+      <tr><td>Cualquier otro origen</td><td class="c401">bloqueado</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:6mm">Origenes declarados de forma explicita, no un comodin, y solo con
+  los metodos y cabeceras que la aplicacion necesita.</p>
+  <div class="pie"><span>API Gateway → CORS</span><span>9</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow demo">Demostracion</div>
+  <h2>200, 401 y 403</h2>
+  <table>
+    <thead><tr><th>Situacion</th><th>Codigo</th><th>Quien responde</th></tr></thead>
+    <tbody>
+      <tr><td>Token valido y permisos suficientes</td><td class="codigo c200">200</td><td>el microservicio</td></tr>
+      <tr><td>Sin token, o token invalido</td><td class="codigo c401">401</td><td>autorizador del API Gateway</td></tr>
+      <tr><td>Token valido, sin el rol o el scope</td><td class="codigo c403">403</td><td>Spring Security</td></tr>
+      <tr><td>Peticion que no viene del gateway</td><td class="codigo c403">403</td><td>filtro de origen</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:5mm;font-size:15pt"><b>401</b> significa <i>no se quien eres</i>.
+  <b>403</b> significa <i>se quien eres y no puedes</i>.</p>
+  <div class="pie"><span>El usuario cliente recibe 403 en /v1/pedidos/todos con un token perfectamente valido</span><span>10</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow">Punto de entrada unico</div>
+  <h2>El gateway no oculta la instancia</h2>
+  <div class="cols">
+    <div>
+      <p>La EC2 tiene IP publica. Un <code>curl</code> directo se saltaria el gateway y su
+      autorizador por completo.</p>
+      <p>El gateway inyecta una cabecera secreta en cada integracion; los servicios rechazan
+      con <b>403</b> lo que llegue sin ella.</p>
+    </div>
+    <div class="tarjeta alerta">
+      <h3>Lo que esta medida no es</h3>
+      <p>No es aislamiento de red. Quien conozca el secreto puede llamar directo. Lo correcto
+      seria subred privada con VPC Link: unos USD 16 al mes, fuera del presupuesto de la cuenta
+      academica.</p>
+    </div>
+  </div>
+  <div class="pie"><span>Decision consciente, documentada en docs/03-api-gateway.md</span><span>11</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow demo">Demostracion</div>
+  <h2>Desplegado, activo e integrado</h2>
+  <div class="cols tres">
+    <div class="tarjeta"><h3>EC2</h3><p>Instancia corriendo con cuatro contenedores: los tres
+    microservicios y nginx sirviendo la aplicacion.</p></div>
+    <div class="tarjeta"><h3>RDS</h3><p>MySQL disponible y <b>sin acceso publico</b>: solo lo
+    alcanza el security group de la EC2.</p></div>
+    <div class="tarjeta"><h3>API Gateway</h3><p>Stage con HTTPS, unico punto de entrada
+    desde Internet.</p></div>
+  </div>
+  <div class="pie"><span>Consola de AWS → EC2 · RDS · API Gateway</span><span>12</span></div>
+</section>
+
+<section class="lamina">
+  <div class="eyebrow">Cierre</div>
+  <h2>Lo que aprendi construyendolo</h2>
+  <ul>
+    <li>Validar por <b>emisor</b> y no contra un IdP fijo: migrar a Entra ID fue cambiar dos
+    variables de entorno, sin tocar una linea de Java</li>
+    <li>Construi un Identity Provider propio para entender el protocolo, y despues <b>lo elimine</b>:
+    dejarlo habria sido un camino de acceso paralelo y mas debil</li>
+    <li>La seguridad se verifica, no se declara: <b>20 de 20</b> comprobaciones contra el
+    despliegue y <b>9 de 9</b> del flujo de inicio de sesion</li>
+  </ul>
+  <div class="pie"><span>github.com/1samadhi/cloud-exp1-oidc · github.com/1samadhi/cloud-exp1-front-angular</span><span>13</span></div>
+</section>
+
+<section class="lamina guion">
+  <div class="eyebrow">No proyectar · apoyo del presentador</div>
+  <h2>Guion, minuto a minuto</h2>
+  <table>
+    <tbody>
+      <tr><td class="min">0:00</td><td><b>Laminas 1-3.</b> El problema y la arquitectura. Frase de apertura: "la identidad la administra Azure, el computo esta en AWS, y el unico puente es el JWKS".</td></tr>
+      <tr><td class="min">1:00</td><td><b>Laminas 4-5 · Azure.</b> Overview del tenant, Users con sus roles, App registration: Authentication (SPA, Web vacio), Expose an API, App roles.</td></tr>
+      <tr><td class="min">2:30</td><td><b>Laminas 6-7 · Login en vivo.</b> Iniciar sesion, ir a "Mi token", mostrar scp y roles. Luego la lamina de PKCE con code_challenge_method=S256.</td></tr>
+      <tr><td class="min">4:00</td><td><b>Laminas 8-9 · AWS.</b> API Gateway: Routes, Integrations, Authorization, CORS.</td></tr>
+      <tr><td class="min">5:30</td><td><b>Lamina 10 · Codigos.</b> Thunder Client o docs/evidencias/08-codigos-http.txt: 200, 401, 403 por rol y 403 por acceso directo.</td></tr>
+      <tr><td class="min">6:45</td><td><b>Laminas 11-12.</b> El punto de entrada unico con su limitacion, y las consolas de EC2 y RDS.</td></tr>
+      <tr><td class="min">7:45</td><td><b>Lamina 13.</b> Cierre.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="margin-top:8mm">Preguntas probables</h2>
+  <table>
+    <tbody>
+      <tr><td class="min">JWT doble</td><td>El gateway protege el borde, no el servidor: la EC2 tiene IP publica. Por eso ademas exigimos la cabecera del gateway.</td></tr>
+      <tr><td class="min">¿Es seguro?</td><td>Lo correcto seria VPC Link con subred privada, ~USD 16/mes, fuera del presupuesto. La cabecera es una mitigacion consciente, no aislamiento de red.</td></tr>
+      <tr><td class="min">External ID</td><td>Imposible con estas cuentas: ciamDirectories y Azure for Students no comparten ninguna region, y la restriccion es una politica de sistema que ni un Owner puede eximir.</td></tr>
+      <tr><td class="min">IdP propio</td><td>Lo construi para entender el protocolo y sirvio de andamio antes de que existiera el tenant. Luego migre a Entra y lo elimine.</td></tr>
+      <tr><td class="min">Minimo privilegio</td><td>ms-auth tiene AppRoleAssignment.ReadWrite.All, mas poder del necesario. Graph no ofrece uno mas acotado para asignar roles de la propia app.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</body></html>
