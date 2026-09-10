@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -30,11 +31,14 @@ import jakarta.servlet.http.HttpServletResponse;
  * que el gateway sea el unico camino funcional, y que las reglas del borde no
  * se puedan eludir.
  *
- * Se ejecuta antes que la cadena de Spring Security para que el trafico ajeno
- * ni siquiera llegue a la validacion del token.
+ * Se registra con la precedencia mas alta para correr antes que la cadena de
+ * Spring Security, que el arranque situa en el orden -100. Con un orden
+ * posterior, una peticion ajena y sin token recibiria un 401 de Security en vez
+ * del 403 de este filtro, y el trafico llegaria a la validacion del token sin
+ * necesidad.
  */
 @Component
-@Order(1)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class FiltroOrigenGateway extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(FiltroOrigenGateway.class);
