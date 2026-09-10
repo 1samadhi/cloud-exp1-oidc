@@ -131,6 +131,22 @@ try {
   comprobar('El cliente no envia secreto',
     !parametros.get('client_secret'));
 
+  // ---- el detalle de la peticion de autorizacion, como evidencia escrita ----
+  const detalle = [...parametros.entries()]
+    .filter(([k]) => !['nonce', 'state', 'client-request-id', 'x-client-SKU',
+                       'x-client-VER', 'client_info'].includes(k))
+    .map(([k, v]) => `${k} = ${v.length > 90 ? v.slice(0, 90) + '...' : v}`)
+    .join('\n');
+  writeFileSync(join(EVIDENCIAS, '03-peticion-authorize.txt'),
+    `Peticion al endpoint de autorizacion de Microsoft Entra ID\n` +
+    `Capturada por scripts/verificar-pkce.mjs el ${new Date().toISOString()}\n\n` +
+    `${new URL(urlAutorizacion).origin}${new URL(urlAutorizacion).pathname}\n\n${detalle}\n\n` +
+    `code_challenge_method=S256 confirma Authorization Code con PKCE:\n` +
+    `el navegador genera un code_verifier al azar, envia solo su hash SHA-256\n` +
+    `como code_challenge, y presenta el original al canjear el codigo. Un codigo\n` +
+    `interceptado no sirve sin el verifier.\n`);
+  console.log('  captura  docs/evidencias/03-peticion-authorize.txt');
+
   // ---- completar el login ----
   await pagina.fill('input[type="email"]', USUARIO);
   await pagina.click('input[type="submit"]');
@@ -158,13 +174,13 @@ try {
 
   const nombreVisible = await pagina.locator('.usuario').first().textContent().catch(() => null);
   comprobar('Sesion iniciada en la aplicacion', Boolean(nombreVisible), nombreVisible || '');
-  await pagina.screenshot({ path: join(EVIDENCIAS, '03-sesion-iniciada.png'), fullPage: true });
+  await pagina.screenshot({ path: join(EVIDENCIAS, '04-sesion-iniciada.png'), fullPage: true });
 
   // ---- recorrido con sesion activa ----
   for (const [ruta, archivo] of [
-    ['catalogo', '04-catalogo.png'],
-    ['pedidos', '05-pedidos.png'],
-    ['perfil', '06-claims-del-token.png']
+    ['catalogo', '05-catalogo.png'],
+    ['pedidos', '06-pedidos.png'],
+    ['perfil', '07-claims-del-token.png']
   ]) {
     await pagina.getByRole('link', { name: new RegExp(ruta, 'i') }).first().click();
     await pagina.waitForLoadState('networkidle');
@@ -173,21 +189,7 @@ try {
     console.log(`  captura  docs/evidencias/${archivo}`);
   }
 
-  // ---- el detalle de la peticion de autorizacion, como evidencia escrita ----
-  const detalle = [...parametros.entries()]
-    .filter(([k]) => !['nonce', 'state', 'client-request-id', 'x-client-SKU',
-                       'x-client-VER', 'client_info'].includes(k))
-    .map(([k, v]) => `${k} = ${v.length > 90 ? v.slice(0, 90) + '...' : v}`)
-    .join('\n');
-  writeFileSync(join(EVIDENCIAS, '07-peticion-authorize.txt'),
-    `Peticion al endpoint de autorizacion de Microsoft Entra ID\n` +
-    `Capturada por scripts/verificar-pkce.mjs el ${new Date().toISOString()}\n\n` +
-    `${new URL(urlAutorizacion).origin}${new URL(urlAutorizacion).pathname}\n\n${detalle}\n\n` +
-    `code_challenge_method=S256 confirma Authorization Code con PKCE:\n` +
-    `el navegador genera un code_verifier al azar, envia solo su hash SHA-256\n` +
-    `como code_challenge, y presenta el original al canjear el codigo. Un codigo\n` +
-    `interceptado no sirve sin el verifier.\n`);
-  console.log('  captura  docs/evidencias/07-peticion-authorize.txt');
+
 
 } catch (e) {
   console.error(`\n  Error durante la verificacion: ${e.message}`);

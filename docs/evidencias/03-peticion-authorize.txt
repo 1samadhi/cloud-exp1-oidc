@@ -1,0 +1,19 @@
+Peticion al endpoint de autorizacion de Microsoft Entra ID
+Capturada por scripts/verificar-pkce.mjs el 2026-09-10T14:07:43.429Z
+
+https://login.microsoftonline.com/5cb85dc6-a73b-41fc-b2b9-5b2a9b3f531b/oauth2/v2.0/authorize
+
+client_id = c483f102-da2d-41b5-b48e-26e7ca78ab98
+scope = api://c483f102-da2d-41b5-b48e-26e7ca78ab98/productos.leer api://c483f102-da2d-41b5-b48e-26...
+redirect_uri = https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo/
+response_mode = fragment
+clidata = 1
+claims = {"id_token":{"signin_state":{"essential":false},"login_hint":{"essential":false},"tenant_r...
+response_type = code
+code_challenge = wKgfDWE2Xsjbnw0Vb50XLGrTVfQYtl9D9VRU-B1J_qk
+code_challenge_method = S256
+
+code_challenge_method=S256 confirma Authorization Code con PKCE:
+el navegador genera un code_verifier al azar, envia solo su hash SHA-256
+como code_challenge, y presenta el original al canjear el codigo. Un codigo
+interceptado no sirve sin el verifier.

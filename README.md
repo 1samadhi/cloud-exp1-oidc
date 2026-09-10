@@ -245,6 +245,18 @@ Importar `postman/EXP1.postman_collection.json`, equivalente a la de Thunder
 Client. Mismo criterio: ejecutar primero **0. Token de Entra ID**, que guarda el
 token en una variable de coleccion, y rellenar antes `passwordAdmin`.
 
+### Evidencias reproducibles
+
+```bash
+# verifica PKCE y captura el navegador
+PLAYWRIGHT_DIR=/ruta/node_modules node scripts/verificar-pkce.mjs
+
+# codigos 200, 401 y 403, y el punto de entrada unico
+IP_EC2=<ip> ./scripts/capturar-codigos.sh <stage>
+```
+
+El resultado queda en `docs/evidencias/`. Ver su README para el detalle.
+
 ### Navegador
 
 Abrir la URL del stage. El frontend permite iniciar sesion, ver el token con sus
@@ -260,6 +272,7 @@ claims decodificados y llamar a cada endpoint mostrando la respuesta.
 | `docs/04-despliegue-ec2.md`   | La instancia, SSM y el control de costos      |
 | `docs/05-base-de-datos.md`    | RDS MySQL, aislamiento de red y esquema       |
 | `docs/06-frontend-angular.md` | Angular, MSAL, guard, interceptor y PKCE      |
+| `docs/evidencias/`            | Capturas y codigos de respuesta del sistema   |
 | `thunder-client/`             | Coleccion y entorno de Thunder Client         |
 | `postman/`                    | La misma coleccion en formato Postman         |
 | `scripts/`                    | Despliegue, pruebas y correccion de la IP      |

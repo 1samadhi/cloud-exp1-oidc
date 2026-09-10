@@ -1,0 +1,28 @@
+Codigos de respuesta del sistema Pedidos360
+Capturado por scripts/capturar-codigos.sh el 2026-09-10T14:09:18Z
+Stage: https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo
+
+== 200: peticion autorizada ==
+  GET  /v1/productos            con token de Entra   -> 200
+  POST /v1/pedidos              con token de Entra   -> 201
+  GET  /v1/public               sin token, ruta abierta -> 200
+
+== 401: el autorizador del API Gateway rechaza en el borde ==
+  GET  /v1/productos            sin token            -> 401
+  GET  /v1/productos            token inventado      -> 401
+  GET  /v1/pedidos              sin token            -> 401
+
+== 403: token valido, pero sin permiso ==
+  GET  /v1/pedidos/todos        admin, rol ADMIN     -> 200
+  GET  /v1/pedidos/todos        cliente, solo USER   -> 403
+
+== 403: el API Gateway es el unico punto de entrada ==
+   Llamadas directas a la instancia, con un token perfectamente valido.
+  http://IP:8081/api/v1/productos    con token            -> 403
+  http://IP:8082/api/v1/pedidos      con token            -> 403
+  http://IP:9000/api/v1/estado       con token            -> 403
+  http://IP:80/                      (frontend)           -> 403
+
+== CORS: solo el dominio del frontend ==
+  OPTIONS /v1/productos  Origin del frontend  -> permitido
+  OPTIONS /v1/productos  Origin desconocido   -> bloqueado
