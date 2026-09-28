@@ -15,7 +15,7 @@
   <artifactId>ms-auth</artifactId>
   <version>2.1.0</version>
   <name>ms-auth</name>
-  <description>Identity Provider OIDC propio</description>
+  <description>BFF de registro de usuarios en el tenant via Microsoft Graph</description>
 
   <properties>
     <java.version>21</java.version>
@@ -26,12 +26,11 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-webmvc</artifactId>
     </dependency>
-    <!-- Spring Security: filtros, codificacion de contrasenias y proteccion de /auth/userinfo -->
+    <!-- Spring Security: la cadena de filtros, el filtro de origen y denyAll -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
-    <!-- Resource Server: aporta Nimbus JOSE para firmar en RS256 y publicar el JWKS -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-webmvc-test</artifactId>

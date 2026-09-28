@@ -166,7 +166,7 @@ public class SecurityConfig {
     }
 
     /**
-     * Normaliza los permisos de los tres emisores a un mismo vocabulario:
+     * Normaliza los permisos de los distintos emisores a un mismo vocabulario:
      * scopes como SCOPE_x y roles o grupos como ROLE_x.
      */
     private Converter<Jwt, AbstractAuthenticationToken> convertidorDeAutoridades() {
@@ -174,7 +174,7 @@ public class SecurityConfig {
         convertidor.setJwtGrantedAuthoritiesConverter(jwt -> {
             Collection<GrantedAuthority> autoridades = new ArrayList<>();
 
-            // "scope" lo usan el IdP propio y Cognito; "scp" lo usa Entra ID
+            // "scp" lo usa Entra ID; "scope" lo usan los demas emisores
             String scopes = jwt.hasClaim("scope") ? jwt.getClaimAsString("scope")
                     : jwt.getClaimAsString("scp");
             if (scopes != null) {
@@ -182,14 +182,14 @@ public class SecurityConfig {
                     if (!s.isBlank()) {
                         // Cognito antepone el identificador del resource server
                         // ("exp1-api/pedidos.escribir"). Se recorta el prefijo para
-                        // que los tres emisores compartan el mismo vocabulario.
+                        // que los distintos emisores compartan el mismo vocabulario.
                         String nombre = s.contains("/") ? s.substring(s.lastIndexOf('/') + 1) : s;
                         autoridades.add(new SimpleGrantedAuthority("SCOPE_" + nombre));
                     }
                 }
             }
 
-            // "roles" en el IdP propio y en Entra ID; "cognito:groups" en Cognito
+            // "roles" en Entra ID; "cognito:groups" en Cognito
             for (String claim : List.of("roles", "cognito:groups")) {
                 List<String> valores = jwt.getClaimAsStringList(claim);
                 if (valores != null) {

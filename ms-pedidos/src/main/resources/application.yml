@@ -24,10 +24,13 @@ spring:
     open-in-view: false
 
 seguridad:
-  emisores: ${SEGURIDAD_EMISORES:http://localhost:9000}
+  # Emisores cuyos tokens acepta este Resource Server, obligatorios: sin ninguno
+  # todo token se rechaza como emisor no confiable. En la practica es el emisor
+  # de Entra ID; se agregan Cognito u otro separandolos por coma, sin tocar codigo.
+  emisores: ${SEGURIDAD_EMISORES:}
   # Vacio desactiva la validacion de audiencia. Ver docs/02-entra-id.md.
   audiencias: ${SEGURIDAD_AUDIENCIAS:}
-  # Origenes del frontend. En desarrollo Vite; en AWS, la URL del stage.
+  # Origenes del frontend. En desarrollo el Angular local; en AWS, la URL del stage.
   origenes-cors: ${SEGURIDAD_ORIGENES_CORS:http://localhost:4200}
   # Cabecera que inyecta el API Gateway en cada integracion. Vacio en local
   # desactiva la comprobacion. Ver docs/03-api-gateway.md.

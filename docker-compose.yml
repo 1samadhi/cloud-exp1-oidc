@@ -38,7 +38,7 @@ services:
       DB_NOMBRE: ${DB_NOMBRE:-pedidos360}
       DB_USUARIO: ${DB_USUARIO:-pedidos360}
       DB_PASSWORD: ${DB_PASSWORD:-cambiar}
-      SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-http://localhost:9000}
+      SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-}
       SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-}
       SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:4200}
       # Exige que la peticion venga del API Gateway. Vacio lo desactiva.
@@ -59,7 +59,7 @@ services:
       DB_NOMBRE: ${DB_NOMBRE:-pedidos360}
       DB_USUARIO: ${DB_USUARIO:-pedidos360}
       DB_PASSWORD: ${DB_PASSWORD:-cambiar}
-      SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-http://localhost:9000}
+      SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-}
       SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-}
       SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:4200}
       # Exige que la peticion venga del API Gateway. Vacio lo desactiva.

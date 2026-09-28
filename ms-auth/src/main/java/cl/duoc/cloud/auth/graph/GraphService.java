@@ -1,6 +1,5 @@
 package cl.duoc.cloud.auth.graph;
 
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -140,9 +139,5 @@ public class GraphService {
     /** Alias validos: minusculas, numeros, punto y guion. */
     public static boolean aliasValido(String alias) {
         return alias != null && alias.matches("[a-z0-9][a-z0-9._-]{2,30}");
-    }
-
-    public List<String> dominios() {
-        return List.of(dominio);
     }
 }
