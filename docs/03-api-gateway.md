@@ -16,61 +16,49 @@ la EC2.
 
 | Metodo | Ruta                                  | Destino            | Autorizador |
 |--------|---------------------------------------|--------------------|-------------|
-| GET    | `/.well-known/openid-configuration`   | ms-auth :9000      | No          |
-| GET    | `/.well-known/jwks.json`              | ms-auth :9000      | No          |
-| POST   | `/auth/login`                         | ms-auth :9000      | No          |
-| GET    | `/auth/userinfo`                      | ms-auth :9000      | Si          |
-| GET    | `/v1/public`                      | ms-productos :8081 | No          |
-| GET    | `/v1/productos`                   | ms-productos :8081 | Si          |
-| GET    | `/v1/productos/quien-soy`         | ms-productos :8081 | Si          |
-| GET    | `/v1/productos/{id}`              | ms-productos :8081 | Si          |
-| GET    | `/v1/pedidos`                     | ms-pedidos :8082   | Si          |
-| POST   | `/v1/pedidos`                     | ms-pedidos :8082   | Si          |
+| GET    | `/v1/public`                          | ms-productos :8081 | No          |
+| POST   | `/auth/registro`                      | ms-auth :9000      | No          |
+| GET    | `/v1/productos`                       | ms-productos :8081 | Si          |
+| GET    | `/v1/productos/{id}`                  | ms-productos :8081 | Si          |
+| GET    | `/v1/productos/quien-soy`             | ms-productos :8081 | Si          |
+| GET    | `/v1/pedidos`                         | ms-pedidos :8082   | Si          |
+| GET    | `/v1/pedidos/todos`                   | ms-pedidos :8082   | Si          |
+| POST   | `/v1/pedidos`                         | ms-pedidos :8082   | Si          |
 | GET    | `/`                                   | front-end :80      | No          |
 | ANY    | `/{proxy+}`                           | front-end :80      | No          |
 
 La ruta comodin `/{proxy+}` sirve los assets del SPA. Las rutas literales tienen
 prioridad sobre ella, asi que `/v1/productos` sigue llegando a su servicio.
 
+`POST /auth/registro` y `/v1/public` no exigen token porque no lo piden: el
+registro crea una cuenta y la ruta publica existe justamente para comprobar el
+despliegue. Todo lo demas pasa por el autorizador.
+
 ## El autorizador JWT
 
 Se crea con dos datos que se leen del propio token (se pueden ver decodificandolo
 en jwt.io o con el panel de tokens del frontend):
 
-- **URL del emisor**: el claim `iss`.
-- **Audiencia**: el claim `aud`.
+- **URL del emisor**: el claim `iss`. Debe ser el de Entra ID.
+- **Audiencia**: el claim `aud`. Es el Client ID de la app registrada.
 
 AWS descarga `{iss}/.well-known/openid-configuration`, lee de ahi el `jwks_uri`,
 baja las llaves publicas y con ellas verifica la firma de cada token entrante.
-
-### Por que el issuer del IdP propio es la URL del stage
-
-Hay una dependencia circular que conviene entender antes de configurarlo:
-
-1. El autorizador necesita alcanzar el discovery del emisor **por HTTPS publico**.
-2. `ms-auth` corre en la EC2, en HTTP y detras del gateway.
-3. La unica URL publica y con HTTPS que tiene es la del propio stage.
-
-Por eso `ms-auth` arranca con `OIDC_ISSUER` igual a la URL del stage y firma sus
-tokens con ese `iss`; y las rutas `/.well-known/*` se publican sin autorizador,
-para que AWS pueda leerlas. El orden correcto es: crear la API y el stage, tomar
-la URL, desplegar `ms-auth` con esa URL como issuer y recien entonces crear el
-autorizador.
+No comparte ninguna credencial con Azure: el unico puente entre las dos nubes es
+esa URL publica de llaves publicas.
 
 ### Un autorizador acepta un solo emisor
 
-El autorizador JWT de una HTTP API valida **un** issuer. No existe forma de que
-una misma ruta acepte tokens del IdP propio y de Cognito a la vez.
+El autorizador JWT de una HTTP API valida **un** issuer. Aqui el emisor es Entra
+ID y un token de cualquier otro emisor se rechaza en el borde.
 
-La solucion adoptada reparte la responsabilidad en dos capas:
+La validacion multi emisor vive en los microservicios, en `SecurityConfig`, que
+elige el validador segun el claim `iss` del token entrante. Esa segunda capa no
+es redundante: la instancia tiene IP publica y los puertos estan abiertos, asi
+que hay caminos que no pasan por el gateway. Para exponer otro emisor en el
+borde se crea un autorizador adicional y se asocia a las rutas que corresponda;
+no hay que tocar codigo.
 
-- **En el borde (API Gateway):** autorizador con el IdP propio. Filtra el trafico
-  no autenticado antes de que consuma recursos de la EC2.
-- **En cada microservicio (Spring):** validacion multi emisor, que acepta los
-  tres. Es la que permite que un token de Cognito o de Entra ID funcione.
-
-Para exponer tambien Cognito o Entra en el borde se crea un autorizador adicional
-y se asocia a las rutas que corresponda; no hay que tocar codigo.
 
 ## La IP publica cambia en cada sesion del laboratorio
 
@@ -98,7 +86,9 @@ La ruta que se publica no es la misma que expone el microservicio:
 | `GET /v1/productos/quien-soy` | `http://IP:8081/api/v1/productos/quien-soy` |
 | `GET /v1/public`           | `http://IP:8081/api/v1/public`         |
 | `GET /v1/pedidos`          | `http://IP:8082/api/v1/pedidos`        |
+| `GET /v1/pedidos/todos`    | `http://IP:8082/api/v1/pedidos/todos`  |
 | `POST /v1/pedidos`         | `http://IP:8082/api/v1/pedidos`        |
+| `POST /auth/registro`      | `http://IP:9000/auth/registro`         |
 
 Separar ambas cosas es justamente lo que aporta un API Manager. La version vive
 en la ruta publica, de modo que publicar una `v2` es apuntar `GET /v2/productos`
