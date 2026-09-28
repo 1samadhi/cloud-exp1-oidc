@@ -27,15 +27,15 @@ de Docker es bastante mas alto que el consumo en regimen.
 
 | Puerto | Motivo                                            |
 |--------|---------------------------------------------------|
-| 22     | SSH con `vockey`                                  |
 | 80     | nginx del frontend                                |
 | 9000   | ms-auth                                           |
 | 8081   | ms-productos                                      |
 | 8082   | ms-pedidos                                        |
 
-Los puertos de los microservicios estan abiertos porque una HTTP API con
-integracion HTTP necesita alcanzar el destino por Internet. Lo que los protege
-no es la red sino el token: sin un JWT valido responden 401.
+El puerto 22 quedo cerrado: la instancia se opera por AWS Systems Manager, sin
+SSH (ver mas abajo). Los puertos de los microservicios estan abiertos porque una
+HTTP API con integracion HTTP necesita alcanzar el destino por Internet. Lo que
+los protege no es la red sino el token: sin un JWT valido responden 401.
 
 En una arquitectura de produccion esto se resolveria con un **VPC Link**, que
 permite integrar el API Gateway con instancias en subredes privadas sin

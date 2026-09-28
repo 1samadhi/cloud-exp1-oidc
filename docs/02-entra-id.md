@@ -155,9 +155,13 @@ vive en los microservicios y no en el gateway.
 Solo variables de entorno, sin tocar codigo:
 
 ```
-SEGURIDAD_EMISORES=https://login.microsoftonline.com/<tenant>/v2.0,<emisor del IdP propio>
-SEGURIDAD_AUDIENCIAS=<clientId>,exp1-api
+SEGURIDAD_EMISORES=https://login.microsoftonline.com/<tenant>/v2.0
+SEGURIDAD_AUDIENCIAS=<clientId>
 ```
+
+La lista de emisores es obligatoria: sin ninguno, todo token se rechaza como
+emisor no confiable. Si se llegara a integrar otro IdP se agrega separandolo por
+coma, sin tocar codigo.
 
 El `SecurityConfig` elige el validador segun el claim `iss` del token entrante y
 normaliza los permisos de cada emisor a un mismo vocabulario.
@@ -175,18 +179,17 @@ normaliza los permisos de cada emisor a un mismo vocabulario.
 }
 ```
 
-Entra usa `scp` para los scopes, mientras el IdP propio y Cognito usan `scope`.
-El convertidor de autoridades lee ambos, por eso el mismo codigo sirve para los
-tres emisores.
+Entra usa `scp` para los scopes, mientras Cognito usa `scope`. El convertidor de
+autoridades lee ambos, por eso el mismo codigo sirve para cualquiera de los dos.
 
 ## Diferencias entre los emisores
 
-| Aspecto              | IdP propio     | Cognito              | Entra ID          |
-|----------------------|----------------|----------------------|-------------------|
-| Claim de scopes      | `scope`        | `scope` con prefijo  | `scp`             |
-| Claim de roles       | `roles`        | `cognito:groups`     | `roles`           |
-| Claim `aud`          | si             | no en client_credentials | si            |
-| Flujo del frontend   | contrasenia    | client_credentials   | code + PKCE       |
+| Aspecto              | Cognito              | Entra ID          |
+|----------------------|----------------------|-------------------|
+| Claim de scopes      | `scope` con prefijo  | `scp`             |
+| Claim de roles       | `cognito:groups`     | `roles`           |
+| Claim `aud`          | no en client_credentials | si            |
+| Flujo del frontend   | client_credentials   | code + PKCE       |
 
 ## Pruebas sin navegador
 

@@ -210,7 +210,8 @@ Ver `.env.example`. El archivo `.env` esta en `.gitignore`.
 
 ### Script de humo
 
-Ejecuta las 20 comprobaciones y verifica el codigo HTTP de cada una:
+Ejecuta 16 comprobaciones y verifica el codigo HTTP de cada una (17 con
+`IP_EC2`, que agrega la de la instancia):
 
 ```bash
 ./scripts/probar-endpoints.sh https://TU-API.execute-api.us-east-1.amazonaws.com/desarrollo
