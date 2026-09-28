@@ -19,10 +19,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
-import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
@@ -122,16 +122,25 @@ public class SecurityConfig {
 
     /**
      * Valida firma, expiracion y emisor. La comprobacion de audiencia es opcional
-     * y solo se activa si se configura {@code seguridad.audiencias}: los tokens
-     * de Cognito emitidos por client_credentials no traen claim {@code aud}, asi
-     * que exigirla romperia el flujo maquina a maquina.
+     * y solo se activa si se configura {@code seguridad.audiencias}. Acepta el
+     * claim {@code aud} (Entra ID, id_token de Cognito) o {@code client_id} (access_token
+     * de Cognito, que no trae {@code aud}).
      */
     private OAuth2TokenValidator<Jwt> validadoresPara(String emisor) {
         List<OAuth2TokenValidator<Jwt>> validadores = new ArrayList<>();
         validadores.add(JwtValidators.createDefaultWithIssuer(emisor));
         if (!audienciasAceptadas.isEmpty()) {
-            validadores.add(new JwtClaimValidator<List<String>>(JwtClaimNames.AUD,
-                    aud -> aud != null && aud.stream().anyMatch(audienciasAceptadas::contains)));
+            // Entra ID y los id_token de Cognito traen "aud". Los access_token de
+            // Cognito no: identifican a la aplicacion en "client_id".
+            validadores.add(jwt -> {
+                List<String> aud = jwt.getAudience();
+                boolean porAud = aud != null && aud.stream().anyMatch(audienciasAceptadas::contains);
+                String cliente = jwt.getClaimAsString("client_id");
+                boolean porCliente = cliente != null && audienciasAceptadas.contains(cliente);
+                return porAud || porCliente ? OAuth2TokenValidatorResult.success()
+                        : OAuth2TokenValidatorResult.failure(
+                                new OAuth2Error("invalid_token", "Audiencia no aceptada", null));
+            });
         }
         return new DelegatingOAuth2TokenValidator<>(validadores);
     }
@@ -169,6 +178,14 @@ public class SecurityConfig {
                             .map(SimpleGrantedAuthority::new)
                             .forEach(autoridades::add);
                 }
+            }
+
+            // Los usuarios que se registran solos en Cognito no pertenecen a ningun
+            // grupo, y sus tokens llegan sin roles. Todo usuario autenticado es USER
+            // por defecto; ADMIN se asigna explicitamente (rol de Entra o grupo de Cognito).
+            boolean tieneRol = autoridades.stream().anyMatch(a -> a.getAuthority().startsWith("ROLE_"));
+            if (!tieneRol) {
+                autoridades.add(new SimpleGrantedAuthority("ROLE_USER"));
             }
             return autoridades;
         });

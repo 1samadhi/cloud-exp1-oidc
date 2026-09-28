@@ -39,7 +39,7 @@ services:
       DB_USUARIO: ${DB_USUARIO:-pedidos360}
       DB_PASSWORD: ${DB_PASSWORD:-cambiar}
       SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-http://localhost:9000}
-      SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-}
+      SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-c483f102-da2d-41b5-b48e-26e7ca78ab98,api://c483f102-da2d-41b5-b48e-26e7ca78ab98}
       SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:4200}
       # Exige que la peticion venga del API Gateway. Vacio lo desactiva.
       SEGURIDAD_SECRETO_GATEWAY: ${SEGURIDAD_SECRETO_GATEWAY:-}
@@ -60,7 +60,7 @@ services:
       DB_USUARIO: ${DB_USUARIO:-pedidos360}
       DB_PASSWORD: ${DB_PASSWORD:-cambiar}
       SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-http://localhost:9000}
-      SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-}
+      SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-c483f102-da2d-41b5-b48e-26e7ca78ab98,api://c483f102-da2d-41b5-b48e-26e7ca78ab98}
       SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:4200}
       # Exige que la peticion venga del API Gateway. Vacio lo desactiva.
       SEGURIDAD_SECRETO_GATEWAY: ${SEGURIDAD_SECRETO_GATEWAY:-}

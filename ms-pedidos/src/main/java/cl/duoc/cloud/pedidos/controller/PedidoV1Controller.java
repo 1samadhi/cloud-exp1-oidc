@@ -59,7 +59,7 @@ public class PedidoV1Controller {
     }
 
     @PostMapping("/pedidos")
-    @PreAuthorize("hasAuthority('SCOPE_pedidos.escribir') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_pedidos.escribir') or hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> crear(@RequestBody NuevoPedidoDTO peticion,
             @AuthenticationPrincipal Jwt jwt) {
         if (peticion.cantidad() <= 0) {

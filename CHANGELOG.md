@@ -2,6 +2,16 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [9.5.0]
+
+- Cognito vuelve como segundo emisor confiable, ahora para usuarios externos que
+  se registran solos con su correo. Entra ID sigue siendo el de la institucion.
+- La audiencia se exige por defecto. Acepta el claim `aud` o `client_id`, porque
+  los access token de Cognito no traen `aud`.
+- Quien no trae roles ni grupos queda como `USER`. `POST /v1/pedidos` acepta el
+  scope `pedidos.escribir` o el rol `USER` o `ADMIN`.
+- Se deja de versionar el archivo de bloqueo de LibreOffice.
+
 ## [9.2.0]
 
 - `scripts/verificar-pkce.mjs`: abre la aplicacion con un navegador, intercepta
