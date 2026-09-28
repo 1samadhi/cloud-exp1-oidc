@@ -1,12 +1,17 @@
 package cl.duoc.cloud.pedidos.service;
 
+import java.time.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 /**
  * Cliente hacia ms-productos que reenvia el mismo token del usuario.
@@ -25,14 +30,27 @@ public class CatalogoClient {
 
     public CatalogoClient(@Value("${servicios.productos-url}") String urlProductos,
             @Value("${seguridad.secreto-gateway:}") String secretoGateway) {
-        this.cliente = RestClient.builder().baseUrl(urlProductos).build();
+        // Sin timeout, un catalogo caido dejaba el hilo de la peticion colgado
+        // hasta que el cliente o el gateway cortaban la conexion.
+        SimpleClientHttpRequestFactory fabrica = new SimpleClientHttpRequestFactory();
+        fabrica.setConnectTimeout(Duration.ofSeconds(2));
+        fabrica.setReadTimeout(Duration.ofSeconds(5));
+        this.cliente = RestClient.builder().baseUrl(urlProductos).requestFactory(fabrica).build();
         this.secretoGateway = secretoGateway;
     }
 
+    /**
+     * Confirma que el producto exista en el catalogo.
+     *
+     * Solo el 404 significa "no existe". Cualquier otra falla (401, 403, timeout,
+     * servicio caido) se propaga como {@link CatalogoNoDisponibleException}: darla
+     * por inexistente responderia 400 con un mensaje enganioso.
+     */
     public boolean existeProducto(Long id) {
         String token = tokenActual();
         if (token == null) {
-            return false;
+            throw new CatalogoNoDisponibleException(id,
+                    new IllegalStateException("No hay token en el contexto de seguridad"));
         }
         try {
             cliente.get()
@@ -40,8 +58,7 @@ public class CatalogoClient {
                     .header("Authorization", "Bearer " + token)
                     // ms-productos solo atiende peticiones que lleguen del API
                     // Gateway. Esta llamada es interna, asi que reenvia la misma
-                    // cabecera; sin ella recibiria 403 y el producto se daria
-                    // por inexistente.
+                    // cabecera; sin ella recibiria 403.
                     .headers(h -> {
                         if (!secretoGateway.isBlank()) {
                             h.set("X-Origen-Gateway", secretoGateway);
@@ -50,9 +67,11 @@ public class CatalogoClient {
                     .retrieve()
                     .toBodilessEntity();
             return true;
-        } catch (Exception e) {
-            log.warn("ms-productos no confirmo el producto {}: {}", id, e.getMessage());
+        } catch (HttpClientErrorException.NotFound e) {
             return false;
+        } catch (RestClientException e) {
+            log.error("ms-productos no confirmo el producto {}: {}", id, e.getMessage());
+            throw new CatalogoNoDisponibleException(id, e);
         }
     }
 
