@@ -20,9 +20,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
-import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
@@ -130,10 +131,38 @@ public class SecurityConfig {
         List<OAuth2TokenValidator<Jwt>> validadores = new ArrayList<>();
         validadores.add(JwtValidators.createDefaultWithIssuer(emisor));
         if (!audienciasAceptadas.isEmpty()) {
-            validadores.add(new JwtClaimValidator<List<String>>(JwtClaimNames.AUD,
-                    aud -> aud != null && aud.stream().anyMatch(audienciasAceptadas::contains)));
+            validadores.add(this::validarAudiencia);
         }
         return new DelegatingOAuth2TokenValidator<>(validadores);
+    }
+
+    /**
+     * El claim {@code aud} no tiene un unico formato: Entra ID v2 lo emite como
+     * cadena, Cognito y el flujo de client_credentials como lista. Castearlo a
+     * {@code List} hacia fallar con ClassCastException y 500, asi que se lee como
+     * objeto y se normaliza antes de comparar.
+     */
+    private OAuth2TokenValidatorResult validarAudiencia(Jwt jwt) {
+        List<String> audiencias = audienciasDe(jwt);
+        if (audiencias.stream().anyMatch(audienciasAceptadas::contains)) {
+            return OAuth2TokenValidatorResult.success();
+        }
+        return OAuth2TokenValidatorResult.failure(
+                new OAuth2Error("invalid_token", "Audiencia no aceptada: " + audiencias, null));
+    }
+
+    private static List<String> audienciasDe(Jwt jwt) {
+        Object aud = jwt.getClaim(JwtClaimNames.AUD);
+        if (aud == null) {
+            return List.of();
+        }
+        if (aud instanceof String cadena) {
+            return List.of(cadena);
+        }
+        if (aud instanceof List<?> lista) {
+            return lista.stream().map(String::valueOf).toList();
+        }
+        return List.of(String.valueOf(aud));
     }
 
     /**
