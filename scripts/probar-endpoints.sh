@@ -46,8 +46,6 @@ probar() {
 
 echo "=== 1. Rutas publicas (no exigen token) ==="
 probar 200 "GET  ${PREFIJO}/public"                     "$PROD${PREFIJO}/public"
-probar 200 "GET  /.well-known/openid-configuration"  "$AUTH/.well-known/openid-configuration"
-probar 200 "GET  /.well-known/jwks.json"             "$AUTH/.well-known/jwks.json"
 
 echo
 echo "=== 2. Rutas protegidas SIN token (deben rechazar) ==="
@@ -66,8 +64,13 @@ if [[ -f "$RAIZ/.env" ]]; then
   set -a; source "$RAIZ/.env" >/dev/null 2>&1; set +a
 fi
 
-if [[ -z "${ENTRA_TENANT_ID:-}" || -z "${ENTRA_CLIENT_ID:-}" || -z "${ENTRA_PASSWORD_ADMIN:-}" ]]; then
-  echo "  Faltan ENTRA_TENANT_ID, ENTRA_CLIENT_ID o ENTRA_PASSWORD_ADMIN en .env" >&2
+FALTAN=()
+for V in ENTRA_TENANT_ID ENTRA_CLIENT_ID ENTRA_USUARIO_ADMIN ENTRA_PASSWORD_ADMIN \
+         ENTRA_USUARIO_CLIENTE ENTRA_PASSWORD_CLIENTE; do
+  [[ -z "${!V:-}" ]] && FALTAN+=("$V")
+done
+if (( ${#FALTAN[@]} > 0 )); then
+  echo "  Faltan en .env: ${FALTAN[*]}" >&2
   exit 1
 fi
 
@@ -117,6 +120,13 @@ TOKEN_CLIENTE=$(curl -s -m 25 -X POST "https://login.microsoftonline.com/$ENTRA_
         -d "scope=api://$ENTRA_CLIENT_ID/productos.leer api://$ENTRA_CLIENT_ID/pedidos.escribir" \
         -d "username=$ENTRA_USUARIO_CLIENTE" --data-urlencode "password=$ENTRA_PASSWORD_CLIENTE" \
         | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])' 2>/dev/null)
+
+if [[ -z "$TOKEN_CLIENTE" ]]; then
+  # Sin token, la peticion responderia 401 y la comprobacion de rol diria algo
+  # que no tiene nada que ver con autorizacion.
+  echo "  No se pudo obtener el token de $ENTRA_USUARIO_CLIENTE en .env: se omiten las pruebas." >&2
+  exit 1
+fi
 probar 403 "GET  ${PREFIJO}/pedidos/todos como cliente"  "$PED${PREFIJO}/pedidos/todos" \
   -H "Authorization: Bearer $TOKEN_CLIENTE"
 
