@@ -37,7 +37,7 @@ public class PedidoV1Controller {
     public Map<String, String> publico() {
         return Map.of(
                 "servicio", "ms-pedidos",
-                "version", "2.1.0",
+                "version", "9.5.8",
                 "mensaje", "endpoint sin validacion de token");
     }
 

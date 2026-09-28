@@ -27,7 +27,7 @@ print(json.dumps({"commands": [
     # Frontend: se clona la primera vez y se actualiza en las siguientes
     f"if [ -d {front}/.git ]; then cd {front} && git pull --ff-only origin main; "
     f"else git clone {repo} {front}; fi",
-    f"cd {front} && docker build --build-arg BASE_HREF=/desarrollo/ -t exp1/front-angular:6.0.0 .",
+    f"cd {front} && docker build --build-arg BASE_HREF=/desarrollo/ -t exp1/front-angular:9.5.8 .",
     # Backend: microservicios y orquestacion.
     # .env no viaja en el clon (esta en .gitignore), asi que en una instancia
     # fresca falla aqui con un mensaje claro y no diez lineas mas abajo.

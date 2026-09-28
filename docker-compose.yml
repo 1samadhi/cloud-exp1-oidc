@@ -9,7 +9,7 @@
 services:
   ms-auth:
     build: ./ms-auth
-    image: exp1/ms-auth:3.0.0
+    image: exp1/ms-auth:9.5.8
     container_name: ms-auth
     restart: unless-stopped
     ports:
@@ -27,7 +27,7 @@ services:
 
   ms-productos:
     build: ./ms-productos
-    image: exp1/ms-productos:3.0.0
+    image: exp1/ms-productos:9.5.8
     container_name: ms-productos
     restart: unless-stopped
     ports:
@@ -46,7 +46,7 @@ services:
 
   ms-pedidos:
     build: ./ms-pedidos
-    image: exp1/ms-pedidos:3.0.0
+    image: exp1/ms-pedidos:9.5.8
     container_name: ms-pedidos
     restart: unless-stopped
     ports:
@@ -71,7 +71,7 @@ services:
   # Se construye alli y aqui solo se ejecuta la imagen resultante.
   # Ver scripts/desplegar-en-ec2.sh, que clona ambos repositorios.
   front-angular:
-    image: exp1/front-angular:6.0.0
+    image: exp1/front-angular:9.5.8
     container_name: front-angular
     restart: unless-stopped
     environment:

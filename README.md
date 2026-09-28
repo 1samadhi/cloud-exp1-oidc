@@ -130,6 +130,22 @@ solucion entregada: el enunciado pide que el IDaaS sea Azure.
 - AWS EC2, API Gateway (HTTP API) y RDS
 - Microsoft Entra ID como IDaaS
 
+## Versiones
+
+El sistema tiene una sola version, la del `CHANGELOG`: cada commit lleva su
+numero (`V9.5.7`) y al cerrar cada rama se alinean con ella los tres lugares
+que la hacen visible en tiempo de ejecucion:
+
+| Donde                              | Que identifica                    |
+|------------------------------------|-----------------------------------|
+| `CHANGELOG.md`                     | que cambio en cada version        |
+| etiquetas de las imagenes Docker   | que hay desplegado en la EC2      |
+| `<version>` de los tres `pom.xml`  | la compilacion de cada servicio   |
+| `version` de `/public` y `/estado` | el binario que responde           |
+
+Asi una misma cifra sirve para referirse al sistema completo y para saber que
+version exacta corre en cada contenedor.
+
 ## Endpoints
 
 Rutas publicas del API Gateway. El gateway traduce a la ruta interna del

@@ -14,7 +14,7 @@ public class EstadoController {
     public Map<String, String> estado() {
         return Map.of(
                 "servicio", "ms-auth",
-                "version", "1.0.0",
+                "version", "9.5.8",
                 "estado", "operativo");
     }
 }

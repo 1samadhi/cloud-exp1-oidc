@@ -2,6 +2,122 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [9.5.8]
+
+- Se unifican las tres versiones que corrían por separado: la de este registro
+  (9.x), la versión Maven de cada servicio (2.1.0) y las etiquetas de las
+  imágenes Docker (3.0.0 y 6.0.0), que además no correspondían a ninguna
+  entrada de este archivo. Poms, imágenes y los endpoints `/public` y
+  `/estado` pasan a reportar la versión del sistema; el README documenta el
+  esquema.
+
+## [9.5.7]
+
+- `POST /auth/login` seguía comprobado en el script de humo esperando un 404.
+  Es una ruta retirada en 8.1.0 y ya no figura en ninguna tabla de endpoints: a
+  través del gateway su código dependía del catch-all del frontend, así que
+  podía responder 404, 405 o 200 según nginx. La comprobación no decía nada
+  sobre el sistema actual y dejaba además credenciales de un IdP borrado.
+
+## [9.5.6]
+
+- La documentación deja de citar al IdP propio y al frontend React:
+  `docs/02` quitaba el emisor eliminado de `SEGURIDAD_EMISORES` y una columna
+  de la tabla comparativa; `docs/04` abría el puerto 22 en la tabla del
+  Security Group, contradictoria con el propio documento; `.env.example`
+  arrastraba las variables `VITE_*` y el puerto 5173 del frontend retirado en
+  7.0.0; y el README anunciaba más comprobaciones de humo de las que ejecuta
+  el script.
+
+## [9.5.5]
+
+- `docs/03-api-gateway.md` describía el gateway del IdP propio: tabla de rutas
+  con `/.well-known/*`, `/auth/login` y `/auth/userinfo`, retirados en 8.1.0, y
+  omitiendo `/auth/registro` y `/v1/pedidos/todos`. La sección del autorizador
+  explicaba la dependencia circular con el issuer de `ms-auth`, que dejó de
+  existir en 9.1.0.
+
+## [9.5.4]
+
+- Se retiran los últimos restos del Identity Provider propio, eliminado en
+  9.1.0: el volumen de la llave RSA en el Dockerfile de `ms-auth`, la
+  descripción del pom y sus comentarios sobre firmar en RS256, y el método
+  `dominios()` sin ningún llamador.
+- `SEGURIDAD_EMISORES` dejaba de apuntar por defecto a `http://localhost:9000`,
+  el emisor que ya no existe: sin `.env` todo token caía en 401 por emisor no
+  confiable. Ahora es obligatorio configurarlo, como en `.env.example`.
+
+## [9.5.3]
+
+- `capturar-codigos.sh` hacía `source` de un `.env` que puede no existir y
+  seguía generando una evidencia donde todo responde 401, sin un solo error a
+  la vista. `desplegar-en-ec2.sh` ejecutaba `docker compose --env-file .env`
+  contra una instancia fresca, donde `.env` nunca llega porque no se commitea.
+  Ambos scripts comprueban ahora el archivo y las seis variables de Entra que
+  usan.
+
+## [9.5.2]
+
+- El script de humo comprobaba `/.well-known/openid-configuration` y
+  `jwks.json` esperando 200 sobre rutas del IdP propio, eliminado en 9.1.0: en
+  local respondían 403 del `denyAll` de `ms-auth` y en el stage el 200 venía
+  del catch-all del frontend. Fallaban o pasaban por motivos incorrectos.
+- Valida además los usuarios y contraseñas del cliente antes de pedir el
+  segundo token, para que un 403 no acabe en un 401 sin explicación.
+
+## [9.5.1]
+
+- `CatalogoClient` traducía cualquier fallo (401, 403, timeout, servicio
+  detenido) a "el producto no existe" y el controlador respondía 400 con un
+  mensaje engañoso. Solo el 404 sigue significando no existente; el resto se
+  propaga como `CatalogoNoDisponibleException` y se responde 502.
+- El `RestClient` no tenía timeout: un catálogo inaccesible dejaba el hilo de
+  la petición colgado hasta que el cliente o el gateway cortaban.
+- `productoId` nulo no se validaba y llegaba hasta el cliente HTTP.
+
+## [9.5.0]
+
+- El validador de audiencia casteaba el claim `aud` a `List<String>`, pero
+  Entra ID v2 lo emite como cadena. Con `SEGURIDAD_AUDIENCIAS` configurado, el
+  `ClassCastException` terminaba en 500 en todas las rutas protegidas. Se lee
+  como objeto y se normaliza antes de comparar.
+
+## [9.4.2]
+
+- El informe y la presentación quedan firmados por los dos integrantes.
+
+## [9.4.1]
+
+- La presentación de la defensa se agrega también en formato editable
+  (`.pptx`), con el script que la genera y el diagrama original.
+
+## [9.4.0]
+
+- `docs/presentacion/`: presentación de la defensa en HTML y PDF, con su guion,
+  su estilo y su diagrama de arquitectura.
+
+## [9.3.0]
+
+- `docs/informe/`: informe del encargo en PDF, con sus fuentes (HTML, CSS y el
+  diagrama en SVG) y su README. Las evidencias de login se recapturan para
+  acompañarlo.
+
+## [9.2.3]
+
+- Evidencias completas del flujo de inicio de sesión: sesión iniciada, catálogo,
+  pedidos y los claims del token decodificados, con el README que explica cada
+  archivo.
+
+## [9.2.2]
+
+- Las pruebas dejan de depender de un MySQL levantado: cada servicio recibe su
+  `application.yml` de test con H2 en memoria, así la build se reproduce en
+  cualquier máquina.
+
+## [9.2.1]
+
+- Se pone al día el registro de cambios, que estaba desactualizado.
+
 ## [9.2.0]
 
 - `scripts/verificar-pkce.mjs`: abre la aplicacion con un navegador, intercepta
