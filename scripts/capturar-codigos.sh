@@ -11,7 +11,21 @@ RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BASE=${1:-${EXP1_URL:?Define EXP1_URL o pasa la URL como argumento}}
 SALIDA="$RAIZ/docs/evidencias/08-codigos-http.txt"
 
+if [[ ! -f "$RAIZ/.env" ]]; then
+  echo "No existe .env: copia .env.example y rellena las variables de Entra antes de capturar." >&2
+  exit 1
+fi
 set -a; source "$RAIZ/.env" >/dev/null 2>&1; set +a
+
+FALTAN=()
+for V in ENTRA_TENANT_ID ENTRA_CLIENT_ID ENTRA_USUARIO_ADMIN ENTRA_PASSWORD_ADMIN \
+         ENTRA_USUARIO_CLIENTE ENTRA_PASSWORD_CLIENTE; do
+  [[ -z "${!V:-}" ]] && FALTAN+=("$V")
+done
+if (( ${#FALTAN[@]} > 0 )); then
+  echo "Faltan en .env: ${FALTAN[*]}" >&2
+  exit 1
+fi
 
 pedir_token() {
   curl -s -m 25 -X POST "https://login.microsoftonline.com/$ENTRA_TENANT_ID/oauth2/v2.0/token" \
