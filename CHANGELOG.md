@@ -2,6 +2,30 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.0.0]
+
+- Punto de partida de la Evaluacion 2. `ms-pedidos` pasa a `ms-carrito`: el
+  paquete queda en `cl.duoc.cloud.carrito`, la entidad `Pedido` en `ItemCarrito`
+  y la tabla en `carrito_items`. El servicio guardaba cliente, producto y
+  cantidad, que es un item de carrito y no una orden; el nombre "orden" queda
+  libre para el microservicio que publica los eventos de mensajeria.
+- Las rutas pasan de `/v1/pedidos` a `/v1/carrito`. Rompe el contrato con el
+  frontend y con el API Gateway, de ahi la version mayor. El prefijo sigue
+  siendo `v1` porque es un recurso nuevo de esta linea de trabajo, no una
+  segunda version del anterior.
+- `ms-carrito` sube a 3.0.0 y su imagen a `exp1/ms-carrito:4.0.0`. El resto de
+  los servicios queda igual: su codigo no cambia.
+- Los scopes del tenant (`pedidos.leer`, `pedidos.escribir`), el resource server
+  `exp1-api` y la base de datos `pedidos360` conservan su nombre: estan
+  declarados en el IDaaS y en RDS, y renombrarlos obliga a reconfigurar el
+  tenant y volver a emitir los tokens.
+- `docker-compose.rabbitmq.yml` y `rabbitmq/rabbitmq.conf`: cluster de dos nodos
+  con el panel en 15672 y 15673. Los microservicios apuntan a los dos nodos con
+  `SPRING_RABBITMQ_ADDRESSES` para seguir funcionando si uno cae.
+- `rabbitmq/TOPOLOGIA.md` fija los nombres de exchanges, colas, bindings y DLQ,
+  y el contrato del mensaje `orden.creada`. Ningun nombre se escribe a mano en
+  el codigo: cada servicio los lee de su `application.yml`.
+
 ## [9.5.0]
 
 - Cognito vuelve como segundo emisor confiable, ahora para usuarios externos que

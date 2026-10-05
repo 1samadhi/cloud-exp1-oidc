@@ -343,10 +343,10 @@
       ]
     },
     {
-      "name": "3. Pedidos (Resource Server)",
+      "name": "3. Carrito (Resource Server)",
       "item": [
         {
-          "name": "1. Crear pedido",
+          "name": "1. Crear item",
           "request": {
             "method": "POST",
             "header": [
@@ -356,9 +356,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/pedidos",
+              "raw": "{{baseUrl}}/v1/carrito",
               "host": [
-                "{{baseUrl}}/v1/pedidos"
+                "{{baseUrl}}/v1/carrito"
               ]
             },
             "auth": {
@@ -405,9 +405,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/pedidos",
+              "raw": "{{baseUrl}}/v1/carrito",
               "host": [
-                "{{baseUrl}}/v1/pedidos"
+                "{{baseUrl}}/v1/carrito"
               ]
             },
             "auth": {
@@ -429,7 +429,7 @@
                 }
               }
             },
-            "description": "ms-productos responde 404 y ms-pedidos lo traduce a 400."
+            "description": "ms-productos responde 404 y ms-carrito lo traduce a 400."
           },
           "event": [
             {
@@ -454,9 +454,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/pedidos",
+              "raw": "{{baseUrl}}/v1/carrito",
               "host": [
-                "{{baseUrl}}/v1/pedidos"
+                "{{baseUrl}}/v1/carrito"
               ]
             },
             "auth": {
@@ -492,14 +492,14 @@
           ]
         },
         {
-          "name": "4. Mis pedidos",
+          "name": "4. Mi carrito",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/v1/pedidos",
+              "raw": "{{baseUrl}}/v1/carrito",
               "host": [
-                "{{baseUrl}}/v1/pedidos"
+                "{{baseUrl}}/v1/carrito"
               ]
             },
             "auth": {
@@ -512,7 +512,7 @@
                 }
               ]
             },
-            "description": "Devuelve solo los pedidos cuyo cliente es el 'sub' del token."
+            "description": "Devuelve solo los items del carrito cuyo cliente es el 'sub' del token."
           },
           "event": [
             {

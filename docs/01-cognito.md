@@ -37,8 +37,8 @@ aws cognito-idp create-resource-server \
   --user-pool-id $POOL --identifier exp1-api --name "API EXP1" \
   --scopes '[{"ScopeName":"productos.leer","ScopeDescription":"Consultar el catalogo"},
              {"ScopeName":"productos.escribir","ScopeDescription":"Modificar el catalogo"},
-             {"ScopeName":"pedidos.leer","ScopeDescription":"Consultar pedidos"},
-             {"ScopeName":"pedidos.escribir","ScopeDescription":"Crear pedidos"}]'
+             {"ScopeName":"pedidos.leer","ScopeDescription":"Consultar el carrito"},
+             {"ScopeName":"pedidos.escribir","ScopeDescription":"Crear items del carrito"}]'
 
 # 4. Cliente maquina a maquina (client_credentials, sin interaccion de usuario)
 aws cognito-idp create-user-pool-client \

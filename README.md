@@ -54,7 +54,7 @@ la imagen del frontend en su repositorio y levanta el stack desde este.
         |  front-angular  :80   nginx       |
         |  ms-auth        :9000 BFF         |
         |  ms-productos   :8081 Resource    |
-        |  ms-pedidos     :8082 Resource    |
+        |  ms-carrito     :8082 Resource    |
         +----------------+------------------+
                          | 3306 (privado)
                          v
@@ -79,7 +79,7 @@ se puede alcanzar sin pasar por el gateway.
 | `front-angular`  | 80     | SPA Angular 22 con MSAL — repositorio aparte         |
 | `ms-auth`        | 9000   | BFF: registra usuarios en el tenant via Graph        |
 | `ms-productos`   | 8081   | Catalogo — Resource Server OAuth 2.0                 |
-| `ms-pedidos`     | 8082   | Pedidos — Resource Server OAuth 2.0                  |
+| `ms-carrito`     | 8082   | Carrito — Resource Server OAuth 2.0                  |
 | RDS MySQL        | 3306   | Persistencia, sin acceso desde Internet              |
 
 ## Identidad
@@ -150,16 +150,16 @@ microservicio, que conserva su propio prefijo `/api/v1`.
 | GET    | `/v1/productos`           | Lista el catalogo                            |
 | GET    | `/v1/productos/{id}`      | Consulta un producto                         |
 | GET    | `/v1/productos/quien-soy` | Emisor, sujeto y claims del token presentado |
-| GET    | `/v1/pedidos`             | Pedidos del usuario del token                |
-| GET    | `/v1/pedidos/todos`       | Todos los pedidos — exige el rol `ADMIN`     |
-| POST   | `/v1/pedidos`             | Crea un pedido                               |
+| GET    | `/v1/carrito`             | Items del carrito del usuario del token                |
+| GET    | `/v1/carrito/todos`       | Todos los items del carrito — exige el rol `ADMIN`     |
+| POST   | `/v1/carrito`             | Crea un item                               |
 
-`POST /v1/pedidos` exige el scope `pedidos.escribir` o el rol `ADMIN`, y valida
+`POST /v1/carrito` exige el scope `pedidos.escribir` o el rol `ADMIN`, y valida
 el producto llamando a `ms-productos` con el mismo token del usuario: la
 identidad viaja entre servicios en lugar de confiar en el llamador interno.
 
-El pedido se asocia al claim `sub` del token, nunca a un campo que envie el
-cliente, de modo que nadie puede crear ni consultar pedidos a nombre de otro.
+El item se asocia al claim `sub` del token, nunca a un campo que envie el
+cliente, de modo que nadie puede crear ni consultar items del carrito a nombre de otro.
 
 ### Codigos de respuesta
 
@@ -170,7 +170,7 @@ cliente, de modo que nadie puede crear ni consultar pedidos a nombre de otro.
 | Token valido sin el rol o el scope      | 403    |
 | Peticion que no viene del API Gateway   | 403    |
 
-`GET /v1/pedidos/todos` demuestra el tercer caso: el usuario `cliente` recibe
+`GET /v1/carrito/todos` demuestra el tercer caso: el usuario `cliente` recibe
 403 con un token perfectamente valido, que es distinto del 401 de quien no
 presenta ninguno.
 
@@ -196,11 +196,11 @@ commitea.
 
 | Variable                   | Servicio            | Descripcion                                  |
 |----------------------------|---------------------|----------------------------------------------|
-| `SEGURIDAD_EMISORES`       | productos, pedidos  | Emisores confiables, separados por coma      |
-| `SEGURIDAD_AUDIENCIAS`     | productos, pedidos  | Audiencias aceptadas                         |
-| `SEGURIDAD_ORIGENES_CORS`  | productos, pedidos  | Origenes permitidos por CORS                 |
-| `PRODUCTOS_URL`            | ms-pedidos          | URL base de ms-productos                     |
-| `DB_HOST` … `DB_PASSWORD`  | productos, pedidos  | Conexion a la base de datos                  |
+| `SEGURIDAD_EMISORES`       | productos, carrito  | Emisores confiables, separados por coma      |
+| `SEGURIDAD_AUDIENCIAS`     | productos, carrito  | Audiencias aceptadas                         |
+| `SEGURIDAD_ORIGENES_CORS`  | productos, carrito  | Origenes permitidos por CORS                 |
+| `PRODUCTOS_URL`            | ms-carrito          | URL base de ms-productos                     |
+| `DB_HOST` … `DB_PASSWORD`  | productos, carrito  | Conexion a la base de datos                  |
 | `GRAPH_*`                  | ms-auth             | Credenciales de la app de backend en Entra   |
 | `SEGURIDAD_SECRETO_GATEWAY`| los tres y nginx    | Cabecera que exige que la peticion venga del gateway |
 
@@ -331,7 +331,7 @@ una direccion, asi que el cambio de IP no la afecta.
 
 ## Persistencia
 
-El catalogo y los pedidos viven en **Amazon RDS MySQL**. La instancia no tiene
+El catalogo y los items del carrito viven en **Amazon RDS MySQL**. La instancia no tiene
 acceso publico: solo la alcanzan los microservicios de la EC2. Las entidades,
 los repositorios y el aislamiento de red estan documentados en
 `docs/05-base-de-datos.md`.

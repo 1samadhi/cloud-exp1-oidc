@@ -31,7 +31,7 @@ de Docker es bastante mas alto que el consumo en regimen.
 | 80     | nginx del frontend                                |
 | 9000   | ms-auth                                           |
 | 8081   | ms-productos                                      |
-| 8082   | ms-pedidos                                        |
+| 8082   | ms-carrito                                        |
 
 Los puertos de los microservicios estan abiertos porque una HTTP API con
 integracion HTTP necesita alcanzar el destino por Internet. Lo que los protege

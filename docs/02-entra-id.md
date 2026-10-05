@@ -95,7 +95,7 @@ az rest --method PATCH --uri ".../applications/$OBJ" --body '{"appRoles":[
 Preautorizar la propia SPA evita la pantalla de consentimiento en cada login.
 
 Los **scopes** dicen que puede hacer la aplicacion (`pedidos.escribir`); los
-**roles** dicen quien es la persona (`ADMIN`). El controlador de pedidos usa los
+**roles** dicen quien es la persona (`ADMIN`). El controlador de items del carrito usa los
 dos: `hasAuthority('SCOPE_pedidos.escribir') or hasRole('ADMIN')`.
 
 ### Version 2 de los tokens

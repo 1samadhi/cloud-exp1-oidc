@@ -52,7 +52,7 @@ probar 200 "GET  /.well-known/jwks.json"             "$AUTH/.well-known/jwks.jso
 echo
 echo "=== 2. Rutas protegidas SIN token (deben rechazar) ==="
 probar 401 "GET  ${PREFIJO}/productos"                  "$PROD${PREFIJO}/productos"
-probar 401 "GET  ${PREFIJO}/pedidos"                    "$PED${PREFIJO}/pedidos"
+probar 401 "GET  ${PREFIJO}/carrito"                    "$PED${PREFIJO}/carrito"
 # El IdP propio quedo retirado en V8.1.0: su login ya no se publica.
 probar 404 "POST /auth/login (retirado del gateway)"   -X POST "$AUTH/auth/login" \
   -H 'Content-Type: application/json' -d '{"username":"admin","password":"admin123"}' 
@@ -97,14 +97,14 @@ probar 200 "GET  ${PREFIJO}/productos"                  "$PROD${PREFIJO}/product
 probar 200 "GET  ${PREFIJO}/productos/1"                "$PROD${PREFIJO}/productos/1" "${AUTORIZACION[@]}"
 probar 404 "GET  ${PREFIJO}/productos/999 (no existe)"  "$PROD${PREFIJO}/productos/999" "${AUTORIZACION[@]}"
 probar 200 "GET  ${PREFIJO}/productos/quien-soy"        "$PROD${PREFIJO}/productos/quien-soy" "${AUTORIZACION[@]}"
-probar 201 "POST ${PREFIJO}/pedidos"                    -X POST "$PED${PREFIJO}/pedidos" \
+probar 201 "POST ${PREFIJO}/carrito"                    -X POST "$PED${PREFIJO}/carrito" \
   "${AUTORIZACION[@]}" -H 'Content-Type: application/json' -d '{"productoId":1,"cantidad":2}'
-probar 400 "POST ${PREFIJO}/pedidos con producto inexistente" -X POST "$PED${PREFIJO}/pedidos" \
+probar 400 "POST ${PREFIJO}/carrito con producto inexistente" -X POST "$PED${PREFIJO}/carrito" \
   "${AUTORIZACION[@]}" -H 'Content-Type: application/json' -d '{"productoId":999,"cantidad":1}'
-probar 400 "POST ${PREFIJO}/pedidos con cantidad cero"  -X POST "$PED${PREFIJO}/pedidos" \
+probar 400 "POST ${PREFIJO}/carrito con cantidad cero"  -X POST "$PED${PREFIJO}/carrito" \
   "${AUTORIZACION[@]}" -H 'Content-Type: application/json' -d '{"productoId":1,"cantidad":0}'
-probar 200 "GET  ${PREFIJO}/pedidos"                    "$PED${PREFIJO}/pedidos" "${AUTORIZACION[@]}"
-probar 200 "GET  ${PREFIJO}/pedidos/todos (rol ADMIN)"  "$PED${PREFIJO}/pedidos/todos" "${AUTORIZACION[@]}"
+probar 200 "GET  ${PREFIJO}/carrito"                    "$PED${PREFIJO}/carrito" "${AUTORIZACION[@]}"
+probar 200 "GET  ${PREFIJO}/carrito/todos (rol ADMIN)"  "$PED${PREFIJO}/carrito/todos" "${AUTORIZACION[@]}"
 
 echo
 echo "=== 5. Registro de usuarios en el tenant (Microsoft Graph) ==="
@@ -117,7 +117,7 @@ TOKEN_CLIENTE=$(curl -s -m 25 -X POST "https://login.microsoftonline.com/$ENTRA_
         -d "scope=api://$ENTRA_CLIENT_ID/productos.leer api://$ENTRA_CLIENT_ID/pedidos.escribir" \
         -d "username=$ENTRA_USUARIO_CLIENTE" --data-urlencode "password=$ENTRA_PASSWORD_CLIENTE" \
         | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])' 2>/dev/null)
-probar 403 "GET  ${PREFIJO}/pedidos/todos como cliente"  "$PED${PREFIJO}/pedidos/todos" \
+probar 403 "GET  ${PREFIJO}/carrito/todos como cliente"  "$PED${PREFIJO}/carrito/todos" \
   -H "Authorization: Bearer $TOKEN_CLIENTE"
 
 echo "=== 7. El API Gateway es el unico punto de entrada ==="

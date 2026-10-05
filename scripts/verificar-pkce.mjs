@@ -183,7 +183,7 @@ try {
   // ---- recorrido con sesion activa ----
   for (const [ruta, archivo] of [
     ['catalogo', '05-catalogo.png'],
-    ['pedidos', '06-pedidos.png'],
+    ['carrito', '06-carrito.png'],
     ['perfil', '07-claims-del-token.png']
   ]) {
     // Se navega por el destino del enlace y no por su texto: la etiqueta

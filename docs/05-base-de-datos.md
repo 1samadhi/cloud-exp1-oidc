@@ -74,7 +74,7 @@ sistema real se usaria una herramienta de migraciones como Flyway o Liquibase,
 porque `update` no sabe borrar ni renombrar columnas.
 
 ```
-productos                        pedidos
+productos                        carrito_items
   id       bigint PK               id           bigint PK
   nombre   varchar(120)            cantidad     int
   precio   int                     cliente      varchar(200)  indexado
@@ -82,7 +82,7 @@ productos                        pedidos
                                    producto_id  bigint
 ```
 
-`pedidos.cliente` guarda el claim `sub` del token, es decir el identificador
+`carrito_items.cliente` guarda el claim `sub` del token, es decir el identificador
 que asigna el IdP. Va indexado porque toda consulta del servicio filtra por el.
 No hay clave foranea hacia `productos`: son microservicios distintos y cada uno
 es dueño de sus datos; la existencia del producto se valida por HTTP contra

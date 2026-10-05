@@ -44,10 +44,10 @@ services:
       # Exige que la peticion venga del API Gateway. Vacio lo desactiva.
       SEGURIDAD_SECRETO_GATEWAY: ${SEGURIDAD_SECRETO_GATEWAY:-}
 
-  ms-pedidos:
-    build: ./ms-pedidos
-    image: exp1/ms-pedidos:3.0.0
-    container_name: ms-pedidos
+  ms-carrito:
+    build: ./ms-carrito
+    image: exp1/ms-carrito:4.0.0
+    container_name: ms-carrito
     restart: unless-stopped
     ports:
       - "8082:8082"
@@ -82,5 +82,5 @@ services:
     depends_on:
       - ms-auth
       - ms-productos
-      - ms-pedidos
+      - ms-carrito
 

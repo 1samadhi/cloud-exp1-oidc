@@ -24,8 +24,8 @@ la EC2.
 | GET    | `/v1/productos`                   | ms-productos :8081 | Si          |
 | GET    | `/v1/productos/quien-soy`         | ms-productos :8081 | Si          |
 | GET    | `/v1/productos/{id}`              | ms-productos :8081 | Si          |
-| GET    | `/v1/pedidos`                     | ms-pedidos :8082   | Si          |
-| POST   | `/v1/pedidos`                     | ms-pedidos :8082   | Si          |
+| GET    | `/v1/carrito`                     | ms-carrito :8082   | Si          |
+| POST   | `/v1/carrito`                     | ms-carrito :8082   | Si          |
 | GET    | `/`                                   | front-end :80      | No          |
 | ANY    | `/{proxy+}`                           | front-end :80      | No          |
 
@@ -97,8 +97,8 @@ La ruta que se publica no es la misma que expone el microservicio:
 | `GET /v1/productos/{id}`   | `http://IP:8081/api/v1/productos/{id}` |
 | `GET /v1/productos/quien-soy` | `http://IP:8081/api/v1/productos/quien-soy` |
 | `GET /v1/public`           | `http://IP:8081/api/v1/public`         |
-| `GET /v1/pedidos`          | `http://IP:8082/api/v1/pedidos`        |
-| `POST /v1/pedidos`         | `http://IP:8082/api/v1/pedidos`        |
+| `GET /v1/carrito`          | `http://IP:8082/api/v1/carrito`        |
+| `POST /v1/carrito`         | `http://IP:8082/api/v1/carrito`        |
 
 Separar ambas cosas es justamente lo que aporta un API Manager. La version vive
 en la ruta publica, de modo que publicar una `v2` es apuntar `GET /v2/productos`
@@ -148,9 +148,9 @@ El puerto 22 quedo cerrado: la instancia se opera por AWS Systems Manager.
 
 ### Llamadas entre microservicios
 
-ms-pedidos valida el producto llamando a ms-productos. Esa peticion es interna y
+ms-carrito valida el producto llamando a ms-productos. Esa peticion es interna y
 tampoco pasa por el gateway, asi que `CatalogoClient` reenvia la misma cabecera.
-Sin eso, ms-productos la rechazaria con 403 y el pedido se rechazaria con un 400
+Sin eso, ms-productos la rechazaria con 403 y el item se rechazaria con un 400
 enganioso: "el producto no existe".
 
 ## Codigos de respuesta
@@ -164,6 +164,6 @@ La pauta pide demostrar 200, 401 y 403 coherentes:
 | Token valido pero sin el rol o el scope          | 403    | Spring Security           |
 | Peticion que no viene del gateway                | 403    | FiltroOrigenGateway       |
 
-`GET /v1/pedidos/todos` existe para demostrar el tercer caso: exige el rol
+`GET /v1/carrito/todos` existe para demostrar el tercer caso: exige el rol
 `ADMIN`, de modo que el usuario `cliente` recibe 403 con un token perfectamente
 valido. Es la diferencia entre "no se quien eres" y "se quien eres y no puedes".

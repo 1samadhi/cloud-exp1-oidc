@@ -34,8 +34,8 @@ codigo() { curl -s -m 25 -o /dev/null -w '%{http_code}' "$@"; }
   echo "== 200: peticion autorizada =="
   printf '  GET  /v1/productos            con token de Entra   -> %s\n' \
     "$(codigo "$BASE/v1/productos" -H "Authorization: Bearer $TOKEN_ADMIN")"
-  printf '  POST /v1/pedidos              con token de Entra   -> %s\n' \
-    "$(codigo -X POST "$BASE/v1/pedidos" -H "Authorization: Bearer $TOKEN_ADMIN" \
+  printf '  POST /v1/carrito              con token de Entra   -> %s\n' \
+    "$(codigo -X POST "$BASE/v1/carrito" -H "Authorization: Bearer $TOKEN_ADMIN" \
        -H 'Content-Type: application/json' -d '{"productoId":1,"cantidad":1}')"
   printf '  GET  /v1/public               sin token, ruta abierta -> %s\n' "$(codigo "$BASE/v1/public")"
   echo
@@ -43,18 +43,18 @@ codigo() { curl -s -m 25 -o /dev/null -w '%{http_code}' "$@"; }
   printf '  GET  /v1/productos            sin token            -> %s\n' "$(codigo "$BASE/v1/productos")"
   printf '  GET  /v1/productos            token inventado      -> %s\n' \
     "$(codigo "$BASE/v1/productos" -H 'Authorization: Bearer no-es-un-token')"
-  printf '  GET  /v1/pedidos              sin token            -> %s\n' "$(codigo "$BASE/v1/pedidos")"
+  printf '  GET  /v1/carrito              sin token            -> %s\n' "$(codigo "$BASE/v1/carrito")"
   echo
   echo "== 403: token valido, pero sin permiso =="
-  printf '  GET  /v1/pedidos/todos        admin, rol ADMIN     -> %s\n' \
-    "$(codigo "$BASE/v1/pedidos/todos" -H "Authorization: Bearer $TOKEN_ADMIN")"
-  printf '  GET  /v1/pedidos/todos        cliente, solo USER   -> %s\n' \
-    "$(codigo "$BASE/v1/pedidos/todos" -H "Authorization: Bearer $TOKEN_CLIENTE")"
+  printf '  GET  /v1/carrito/todos        admin, rol ADMIN     -> %s\n' \
+    "$(codigo "$BASE/v1/carrito/todos" -H "Authorization: Bearer $TOKEN_ADMIN")"
+  printf '  GET  /v1/carrito/todos        cliente, solo USER   -> %s\n' \
+    "$(codigo "$BASE/v1/carrito/todos" -H "Authorization: Bearer $TOKEN_CLIENTE")"
   echo
   if [[ -n "${IP_EC2:-}" ]]; then
     echo "== 403: el API Gateway es el unico punto de entrada =="
     echo "   Llamadas directas a la instancia, con un token perfectamente valido."
-    for P in "8081/api/v1/productos" "8082/api/v1/pedidos" "9000/api/v1/estado"; do
+    for P in "8081/api/v1/productos" "8082/api/v1/carrito" "9000/api/v1/estado"; do
       printf '  http://IP:%-24s con token            -> %s\n' "$P" \
         "$(codigo "http://$IP_EC2:$P" -H "Authorization: Bearer $TOKEN_ADMIN")"
     done

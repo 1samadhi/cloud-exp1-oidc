@@ -21,7 +21,7 @@
     },
     {
       "_id": "eb604ade-2649-440f-87be-b0c3cad76a72",
-      "name": "3. Pedidos (Resource Server)",
+      "name": "3. Carrito (Resource Server)",
       "containerId": "",
       "created": "2026-08-28T15:56:31.956967+00:00",
       "sortNum": 40000
@@ -242,8 +242,8 @@
       "_id": "87229634-a7c8-4d46-87f3-e011feaddee6",
       "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
       "containerId": "eb604ade-2649-440f-87be-b0c3cad76a72",
-      "name": "1. Crear pedido",
-      "url": "{{baseUrl}}/v1/pedidos",
+      "name": "1. Crear item",
+      "url": "{{baseUrl}}/v1/carrito",
       "method": "POST",
       "sortNum": 10000,
       "created": "2026-08-28T15:56:31.956967+00:00",
@@ -279,7 +279,7 @@
       "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
       "containerId": "eb604ade-2649-440f-87be-b0c3cad76a72",
       "name": "2. Producto inexistente (400)",
-      "url": "{{baseUrl}}/v1/pedidos",
+      "url": "{{baseUrl}}/v1/carrito",
       "method": "POST",
       "sortNum": 20000,
       "created": "2026-08-28T15:56:31.956967+00:00",
@@ -299,7 +299,7 @@
           "value": "400"
         }
       ],
-      "docs": "ms-productos responde 404 y ms-pedidos lo traduce a 400.",
+      "docs": "ms-productos responde 404 y ms-carrito lo traduce a 400.",
       "body": {
         "type": "json",
         "raw": "{\n  \"productoId\": 999,\n  \"cantidad\": 1\n}",
@@ -315,7 +315,7 @@
       "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
       "containerId": "eb604ade-2649-440f-87be-b0c3cad76a72",
       "name": "3. Cantidad cero (400)",
-      "url": "{{baseUrl}}/v1/pedidos",
+      "url": "{{baseUrl}}/v1/carrito",
       "method": "POST",
       "sortNum": 30000,
       "created": "2026-08-28T15:56:31.956967+00:00",
@@ -350,8 +350,8 @@
       "_id": "203f0b3f-b233-4a9b-bd0c-46bd78b9170b",
       "colId": "6a698163-b38e-42cb-8bbf-1566a85d053c",
       "containerId": "eb604ade-2649-440f-87be-b0c3cad76a72",
-      "name": "4. Mis pedidos",
-      "url": "{{baseUrl}}/v1/pedidos",
+      "name": "4. Mi carrito",
+      "url": "{{baseUrl}}/v1/carrito",
       "method": "GET",
       "sortNum": 40000,
       "created": "2026-08-28T15:56:31.956967+00:00",
@@ -366,7 +366,7 @@
           "value": "200"
         }
       ],
-      "docs": "Devuelve solo los pedidos cuyo cliente es el 'sub' del token.",
+      "docs": "Devuelve solo los items del carrito cuyo cliente es el 'sub' del token.",
       "auth": {
         "type": "bearer",
         "bearer": "{{token}}"

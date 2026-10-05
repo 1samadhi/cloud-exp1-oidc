@@ -1,0 +1,66 @@
+# Cluster RabbitMQ de dos nodos (EXP2).
+#
+# Solo el cluster, por ejemplo para la demo en EC2:
+#   docker compose -f docker-compose.rabbitmq.yml --env-file .env up -d
+#
+# Junto al resto del sistema:
+#   docker compose -f docker-compose.yml -f docker-compose.rabbitmq.yml up --build -d
+#
+# Verificar que los dos nodos forman un cluster:
+#   docker exec rabbitmq-1 rabbitmqctl cluster_status
+#
+# Panel de administracion: http://localhost:15672 (nodo 1) y :15673 (nodo 2)
+#
+# Los microservicios se conectan a los dos nodos con
+#   SPRING_RABBITMQ_ADDRESSES=rabbitmq-1:5672,rabbitmq-2:5672
+# para seguir funcionando si uno cae.
+
+x-rabbitmq: &rabbitmq
+  # Misma version que el ejemplo del curso. La 4.x ya no lee la cookie desde
+  # la variable de entorno.
+  image: rabbitmq:3.13-management
+  restart: unless-stopped
+  environment:
+    RABBITMQ_DEFAULT_USER: ${RABBITMQ_USUARIO:-pedidos360}
+    RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-cambiar}
+    # Secreto compartido: los nodos con la misma cookie se reconocen
+    RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_COOKIE:-cookie-pedidos360-cambiar}
+  healthcheck:
+    test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+    interval: 10s
+    timeout: 10s
+    retries: 12
+    start_period: 20s
+
+services:
+  rabbitmq-1:
+    <<: *rabbitmq
+    container_name: rabbitmq-1
+    # El nombre del nodo es rabbit@<hostname>: tiene que coincidir con rabbitmq.conf
+    hostname: rabbitmq-1
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - datos_rabbitmq_1:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+
+  rabbitmq-2:
+    <<: *rabbitmq
+    container_name: rabbitmq-2
+    hostname: rabbitmq-2
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - datos_rabbitmq_2:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    # Arranca cuando el 1 ya esta sano, para unirse a su cluster en vez de
+    # formar uno propio
+    depends_on:
+      rabbitmq-1:
+        condition: service_healthy
+
+volumes:
+  datos_rabbitmq_1:
+  datos_rabbitmq_2:

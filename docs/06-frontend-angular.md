@@ -39,7 +39,7 @@ En `auth/msal.config.ts`:
 
 ```ts
 mapa.set(`${api}/v1/productos`, [SCOPES.productosLeer]);
-mapa.set(`${api}/v1/pedidos`,   [SCOPES.pedidosEscribir]);
+mapa.set(`${api}/v1/carrito`,   [SCOPES.pedidosEscribir]);
 ```
 
 Se declara que scope corresponde a cada URL, y el interceptor obtiene el token,
@@ -95,8 +95,8 @@ stage y los identificadores de Entra quedan incrustados en el bundle.
 |-------------|-----------|--------------------------------------------------|
 | `/`         | no        | explicacion del flujo y llamada a `/v1/public`    |
 | `/registro` | no        | formulario que crea la cuenta en el tenant        |
-| `/catalogo` | si        | productos desde RDS y creacion de pedidos         |
-| `/pedidos`  | si        | pedidos del usuario del token                     |
+| `/catalogo` | si        | productos desde RDS y creacion de items del carrito         |
+| `/carrito`  | si        | items del carrito del usuario del token                     |
 | `/perfil`   | si        | claims del id_token, del access_token y del backend |
 
 `/perfil` sirve como evidencia en la presentacion: muestra los claims `scp` y
