@@ -2,6 +2,14 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.1.0]
+
+- `scripts/renombrar-rutas-carrito.sh`: renombra en el API Gateway las rutas
+  `/v1/pedidos` a `/v1/carrito` y corrige el path de las integraciones, que
+  apuntan a `/api/v1/pedidos` en la EC2. Sin esto el stage responde 404 desde el
+  propio microservicio, porque `ms-carrito` ya no expone ese path. Corre en
+  simulacion por defecto y solo cambia algo con `--aplicar`.
+
 ## [10.0.0]
 
 - Punto de partida de la Evaluacion 2. `ms-pedidos` pasa a `ms-carrito`: el
