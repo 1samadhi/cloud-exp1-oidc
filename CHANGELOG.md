@@ -2,6 +2,22 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.2.0]
+
+- El API Gateway valida el JWT en el borde. Autorizador `entra-jwt` (tipo JWT,
+  emisor de Entra, audiencias `api://<clientId>` y `<clientId>`) asociado a
+  `/v1/productos`, `/v1/carrito` y sus comodines. Antes las nueve rutas estaban
+  en `AuthorizationType: NONE` y el token lo revisaba unicamente Spring: un
+  token basura llegaba a consumir CPU de la EC2 antes del rechazo.
+- `/v1/public`, `/`, `/{proxy+}` y `/auth/registro` siguen abiertas. El registro
+  no puede exigir token porque quien se registra todavia no tiene cuenta.
+- Verificado contra el stage: sin token, con token mal formado y con token de
+  otro emisor responde 401 desde el gateway; con un token real de Entra,
+  `/v1/productos` responde 200.
+- Queda anotada en `docs/03-api-gateway.md` una limitacion del diseño: un
+  autorizador JWT admite un solo emisor, asi que los usuarios de Cognito reciben
+  401 en el gateway aunque los microservicios los acepten.
+
 ## [10.1.0]
 
 - `scripts/renombrar-rutas-carrito.sh`: renombra en el API Gateway las rutas

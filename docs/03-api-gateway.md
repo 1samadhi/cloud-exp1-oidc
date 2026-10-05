@@ -14,25 +14,47 @@ la EC2.
 
 ## Rutas
 
-| Metodo | Ruta                                  | Destino            | Autorizador |
-|--------|---------------------------------------|--------------------|-------------|
-| GET    | `/.well-known/openid-configuration`   | ms-auth :9000      | No          |
-| GET    | `/.well-known/jwks.json`              | ms-auth :9000      | No          |
-| POST   | `/auth/login`                         | ms-auth :9000      | No          |
-| GET    | `/auth/userinfo`                      | ms-auth :9000      | Si          |
-| GET    | `/v1/public`                      | ms-productos :8081 | No          |
-| GET    | `/v1/productos`                   | ms-productos :8081 | Si          |
-| GET    | `/v1/productos/quien-soy`         | ms-productos :8081 | Si          |
-| GET    | `/v1/productos/{id}`              | ms-productos :8081 | Si          |
-| GET    | `/v1/carrito`                     | ms-carrito :8082   | Si          |
-| POST   | `/v1/carrito`                     | ms-carrito :8082   | Si          |
-| GET    | `/`                                   | front-end :80      | No          |
-| ANY    | `/{proxy+}`                           | front-end :80      | No          |
+| Metodo | Ruta                        | Destino            | Autorizador |
+|--------|-----------------------------|--------------------|-------------|
+| GET    | `/v1/public`                | ms-productos :8081 | No          |
+| ANY    | `/v1/productos`             | ms-productos :8081 | Si          |
+| ANY    | `/v1/productos/{proxy+}`    | ms-productos :8081 | Si          |
+| ANY    | `/v1/carrito`               | ms-carrito :8082   | Si          |
+| ANY    | `/v1/carrito/{proxy+}`      | ms-carrito :8082   | Si          |
+| POST   | `/auth/registro`            | ms-auth :9000      | No          |
+| GET    | `/`                         | front-end :80      | No          |
+| ANY    | `/{proxy+}`                 | front-end :80      | No          |
+| ANY    | `$default`                  | front-end :80      | No          |
+
+`/auth/registro` va sin autorizador a proposito: quien se registra todavia no
+tiene cuenta, de modo que no puede traer token.
 
 La ruta comodin `/{proxy+}` sirve los assets del SPA. Las rutas literales tienen
-prioridad sobre ella, asi que `/v1/productos` sigue llegando a su servicio.
+prioridad sobre ella, asi que `/v1/productos` sigue llegando a su servicio. El
+efecto secundario es que una ruta retirada no responde 404: la atrapa el comodin
+y devuelve el `index.html` con 200.
 
 ## El autorizador JWT
+
+Hoy el autorizador es `entra-jwt`, de tipo JWT, y valida tokens de Microsoft
+Entra ID:
+
+| Dato | Valor |
+|---|---|
+| Emisor | `https://login.microsoftonline.com/<tenantId>/v2.0` |
+| Audiencias | `api://<clientId>` y `<clientId>` |
+| Fuente de identidad | `$request.header.Authorization` |
+
+Se declaran las dos audiencias porque segun como el frontend pida el token, el
+claim `aud` llega como el App ID URI o como el client id pelado; aceptar ambas
+evita un 401 dificil de diagnosticar.
+
+**Limitacion de un solo emisor.** Un autorizador JWT de HTTP API acepta un unico
+`Issuer`, y cada ruta admite un unico autorizador. Como el sistema tiene dos
+emisores confiables (Entra para la institucion y Cognito para usuarios externos),
+en el gateway solo se puede exigir uno: los access token de Cognito reciben 401
+en el gateway aunque los microservicios los acepten. Validar los dos en el borde
+necesitaria un autorizador Lambda.
 
 Se crea con dos datos que se leen del propio token (se pueden ver decodificandolo
 en jwt.io o con el panel de tokens del frontend):
