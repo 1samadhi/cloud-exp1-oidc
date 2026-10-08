@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,8 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cl.duoc.cloud.carrito.controller.dto.NuevoItemDTO;
 import cl.duoc.cloud.carrito.model.ItemCarrito;
-import cl.duoc.cloud.carrito.service.CatalogoClient;
 import cl.duoc.cloud.carrito.service.CarritoService;
+import cl.duoc.cloud.carrito.service.CatalogoClient;
+import cl.duoc.cloud.carrito.service.CatalogoNoDisponibleException;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -62,6 +64,9 @@ public class CarritoV1Controller {
     @PreAuthorize("hasAuthority('SCOPE_pedidos.escribir') or hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> crear(@RequestBody NuevoItemDTO peticion,
             @AuthenticationPrincipal Jwt jwt) {
+        if (peticion.productoId() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El producto es obligatorio"));
+        }
         if (peticion.cantidad() <= 0) {
             return ResponseEntity.badRequest().body(Map.of("error", "La cantidad debe ser mayor que cero"));
         }
@@ -73,5 +78,17 @@ public class CarritoV1Controller {
         }
         ItemCarrito item = servicio.crear(jwt.getSubject(), peticion.productoId(), peticion.cantidad());
         return ResponseEntity.status(HttpStatus.CREATED).body(item);
+    }
+
+    /**
+     * Un catalogo inaccesible no es un item invalido: se responde 502 y no el
+     * 400 enganioso de "el producto no existe".
+     *
+     * Diagnostico original de Diego Villota en la rama fix/auditoria-v9.
+     */
+    @ExceptionHandler(CatalogoNoDisponibleException.class)
+    public ResponseEntity<Map<String, String>> catalogoNoDisponible(CatalogoNoDisponibleException e) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(Map.of("error", "El catalogo de productos no esta disponible"));
     }
 }

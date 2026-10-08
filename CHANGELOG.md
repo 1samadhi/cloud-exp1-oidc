@@ -2,6 +2,28 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.4.0]
+
+- Un catalogo inaccesible responde **502** y ya no el 400 de "el producto no
+  existe". Antes, cualquier falla al consultar `ms-productos` (401, 403, timeout,
+  servicio caido) se traducia en producto inexistente, de modo que una caida del
+  catalogo se veia como un error del usuario. Ahora solo el 404 significa eso, y
+  el resto sube como `CatalogoNoDisponibleException`. En `ms-carrito` y en
+  `ms-ordenes`, que nacio con el mismo defecto.
+- `CatalogoClient` con timeouts de 2 s para conectar y 5 s para leer. Sin ellos,
+  un catalogo caido dejaba el hilo de la peticion colgado hasta que cortaba el
+  cliente o el gateway.
+- `POST /v1/carrito` valida que venga el `productoId` antes de llamar al
+  catalogo.
+- `AudienciaDelTokenTest`: fija que el claim `aud` se lea igual venga como
+  cadena (Entra ID v2) o como lista (Cognito, client_credentials). El validador
+  actual ya lo resuelve usando `getAudience()`, que normaliza ambos formatos;
+  las pruebas existen para que un refactor no vuelva a leer el claim crudo y
+  reviva el ClassCastException que devolvia 500.
+
+  Diagnostico del problema del `aud` y del 502: Diego Villota, rama
+  `fix/auditoria-v9`.
+
 ## [10.3.0]
 
 - `ms-ordenes`: nuevo microservicio, productor de la mensajeria. Registra la
