@@ -2,6 +2,17 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.5.0]
+
+- `scripts/crear-api-gateway.sh`: crea la API completa desde cero (rutas,
+  integraciones, stage con auto-deploy y el autorizador JWT de Entra) a partir
+  de la IP de la EC2. El laboratorio de AWS Academy se borra entero al terminar
+  —cambia incluso el numero de cuenta—, asi que rehacer la API a mano es una
+  tarea recurrente de treinta clics; aqui es un comando. Incluye ya las rutas de
+  `ms-ordenes` en el puerto 8083.
+- Las rutas `/v1/public`, `/`, `/{proxy+}` y `/auth/registro` quedan abiertas; el
+  resto exige el JWT en el borde.
+
 ## [10.4.0]
 
 - Un catalogo inaccesible responde **502** y ya no el 400 de "el producto no
