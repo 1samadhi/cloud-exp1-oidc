@@ -66,6 +66,33 @@ services:
       SEGURIDAD_SECRETO_GATEWAY: ${SEGURIDAD_SECRETO_GATEWAY:-}
       PRODUCTOS_URL: http://ms-productos:8081
 
+  ms-ordenes:
+    build: ./ms-ordenes
+    image: exp1/ms-ordenes:1.0.0
+    container_name: ms-ordenes
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    depends_on:
+      - ms-productos
+    environment:
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PUERTO: ${DB_PUERTO:-3306}
+      DB_NOMBRE: ${DB_NOMBRE:-pedidos360}
+      DB_USUARIO: ${DB_USUARIO:-pedidos360}
+      DB_PASSWORD: ${DB_PASSWORD:-cambiar}
+      SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-http://localhost:9000}
+      SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-c483f102-da2d-41b5-b48e-26e7ca78ab98,api://c483f102-da2d-41b5-b48e-26e7ca78ab98}
+      SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:4200}
+      # Exige que la peticion venga del API Gateway. Vacio lo desactiva.
+      SEGURIDAD_SECRETO_GATEWAY: ${SEGURIDAD_SECRETO_GATEWAY:-}
+      PRODUCTOS_URL: http://ms-productos:8081
+      # Los dos nodos del cluster de docker-compose.rabbitmq.yml. Si uno cae,
+      # el cliente usa el otro sin cambiar configuracion.
+      SPRING_RABBITMQ_ADDRESSES: ${SPRING_RABBITMQ_ADDRESSES:-rabbitmq-1:5672,rabbitmq-2:5672}
+      RABBITMQ_USUARIO: ${RABBITMQ_USUARIO:-pedidos360}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-cambiar}
+
   # El frontend vive en su propio repositorio:
   #   https://github.com/1samadhi/cloud-exp1-front-angular
   # Se construye alli y aqui solo se ejecuta la imagen resultante.

@@ -2,6 +2,35 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.3.0]
+
+- `ms-ordenes`: nuevo microservicio, productor de la mensajeria. Registra la
+  orden como hecho historico y publica `orden.creada` en el exchange topic
+  `pedidos360.ordenes`. A diferencia del carrito, que es mutable y se vacia, la
+  orden no se modifica: es lo que respalda la boleta y el descuento de stock,
+  asi que guarda el precio unitario de cada linea en vez de mirar el catalogo
+  cada vez.
+- El precio lo pone el catalogo, nunca la peticion: si viniera del cliente,
+  cualquiera podria comprar al valor que quisiera.
+- `config/RabbitConfig`: la topologia completa, un bloque por caso de uso.
+  Tres colas (`productos.stock`, `notificaciones.correo`, `facturacion.ordenes`),
+  cada una con su DLQ via `x-dead-letter-exchange`, los exchanges `topic` y
+  `direct`, y el `pedidos360.dlx`. Sin la DLX, lo que un consumidor rechaza se
+  descarta en silencio.
+- Los nombres salen de `application.yml` leidos con `@ConfigurationProperties`
+  (`pedidos360.rabbit.*`). Ninguno se escribe a mano en el codigo: un nombre
+  repetido en dos clases se desincroniza y el sintoma es un mensaje que se
+  publica bien y que nadie consume, sin error en ningun log.
+- Guardar y publicar van en la misma transaccion. Si el broker esta caido, la
+  orden no queda registrada: una orden que nadie procesa deja stock sin
+  descontar y sin boleta, y detectarla despues exige comparar base contra broker
+  a mano.
+- El convertidor JSON es `JacksonJsonMessageConverter`, no el `Jackson2...`:
+  Spring Boot 4 trae Jackson 3 y el converter viejo busca clases de
+  `com.fasterxml` que ya no estan en el classpath.
+- 8 pruebas del controlador, con el publicador sustituido por un doble para no
+  exigir un broker levantado.
+
 ## [10.2.0]
 
 - El API Gateway valida el JWT en el borde. Autorizador `entra-jwt` (tipo JWT,

@@ -1,0 +1,60 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: ms-ordenes
+
+  # Propiedades de conexion a la base de datos cloud (RDS MySQL).
+  # En AWS apuntan al endpoint del RDS; en local, al contenedor mysql del compose.
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PUERTO:3306}/${DB_NOMBRE:pedidos360}?useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USUARIO:pedidos360}
+    password: ${DB_PASSWORD:cambiar}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+
+  rabbitmq:
+    # Los dos nodos del cluster: si uno cae, el cliente usa el otro sin
+    # cambiar configuracion. En local, un solo nodo tambien funciona.
+    addresses: ${SPRING_RABBITMQ_ADDRESSES:localhost:5672}
+    username: ${RABBITMQ_USUARIO:pedidos360}
+    password: ${RABBITMQ_PASSWORD:cambiar}
+    # El publicador confirma que el broker acepto el mensaje, en lugar de darlo
+    # por enviado en cuanto sale del socket.
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
+seguridad:
+  emisores: ${SEGURIDAD_EMISORES:http://localhost:9000}
+  # Vacio desactiva la validacion de audiencia. Ver docs/02-entra-id.md.
+  audiencias: ${SEGURIDAD_AUDIENCIAS:}
+  # Origenes del frontend. En desarrollo Vite; en AWS, la URL del stage.
+  origenes-cors: ${SEGURIDAD_ORIGENES_CORS:http://localhost:4200}
+  # Cabecera que inyecta el API Gateway en cada integracion. Vacio en local
+  # desactiva la comprobacion. Ver docs/03-api-gateway.md.
+  secreto-gateway: ${SEGURIDAD_SECRETO_GATEWAY:}
+
+servicios:
+  productos-url: ${PRODUCTOS_URL:http://localhost:8081}
+
+# Fuente unica de los nombres de la topologia de mensajeria.
+# Documentados en rabbitmq/TOPOLOGIA.md.
+pedidos360:
+  rabbit:
+    exchange-ordenes: pedidos360.ordenes
+    exchange-notificaciones: pedidos360.notificaciones
+    exchange-dlx: pedidos360.dlx
+    cola-stock: productos.stock
+    cola-correo: notificaciones.correo
+    cola-facturacion: facturacion.ordenes
+    routing-orden-creada: orden.creada
+    patron-ordenes: orden.#
+    sufijo-dlq: .dlq
