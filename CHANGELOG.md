@@ -2,6 +2,27 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.10.0]
+
+- Nuevos microservicios **`ms-notificaciones`** y **`ms-facturacion`**
+  (el "a eleccion" que pide la pauta). Ambos consumen `orden.#` (cualquier
+  evento de orden) con el mismo patron de ACK manual: `basicAck` si ok,
+  reintento limitado (3, leido de `x-death`) en error transitorio, rechazo
+  permanente a la DLQ en error de negocio.
+- `ms-notificaciones` "envia" el correo via log (sin SMTP real, fuera de
+  alcance del laboratorio) y expone `POST /api/v1/notificaciones/prueba` para
+  probarlo desde Postman sin crear una orden real, publicando directo al
+  exchange direct `pedidos360.notificaciones`.
+- `ms-facturacion` persiste la boleta (`id_orden` UNIQUE): idempotente ante
+  mensajes redundantes o carreras entre reintentos, usando
+  `DataIntegrityViolationException` para tratar un duplicado como exito, no
+  como error. Expone `GET /api/v1/facturas/orden/{id}` como evidencia para la
+  demo.
+- 15 pruebas nuevas (7 + 8). Verificado de punta a punta contra un cluster
+  real: una sola orden.creada dispara los 3 consumidores (stock, correo,
+  factura) por el fan-out del exchange topic, y una reentrega no duplica la
+  boleta.
+
 ## [10.9.0]
 
 - Nuevo microservicio **`ms-rabbit-admin`**: administra la topologia de

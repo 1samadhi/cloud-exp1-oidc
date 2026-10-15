@@ -1,0 +1,8 @@
+# Dockerfile liviano: usa un jar ya compilado. Ver ms-rabbit-admin/Dockerfile.liviano.
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+RUN addgroup -S spring && adduser -S spring -G spring
+COPY target/ms-notificaciones-1.0.0.jar app.jar
+USER spring:spring
+EXPOSE 8085
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]

@@ -1,0 +1,13 @@
+seguridad:
+  emisores: https://login.microsoftonline.com/tenant-de-prueba/v2.0
+  audiencias: ""
+  origenes-cors: http://localhost:4200
+  secreto-gateway: ""
+
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        # Sin esto, el contenedor del listener intenta conectarse a un broker
+        # real al arrancar el contexto de prueba.
+        auto-startup: false

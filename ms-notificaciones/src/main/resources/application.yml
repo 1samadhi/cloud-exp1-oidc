@@ -1,0 +1,23 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: ms-notificaciones
+
+  rabbitmq:
+    addresses: ${SPRING_RABBITMQ_ADDRESSES:localhost:5672}
+    username: ${RABBITMQ_USUARIO:pedidos360}
+    password: ${RABBITMQ_PASSWORD:cambiar}
+
+seguridad:
+  emisores: ${SEGURIDAD_EMISORES:http://localhost:9000}
+  audiencias: ${SEGURIDAD_AUDIENCIAS:}
+  origenes-cors: ${SEGURIDAD_ORIGENES_CORS:http://localhost:4200}
+  secreto-gateway: ${SEGURIDAD_SECRETO_GATEWAY:}
+
+pedidos360:
+  rabbit:
+    exchange-notificaciones: pedidos360.notificaciones
+    cola-correo: notificaciones.correo
+    routing-correo-prueba: correo.enviar

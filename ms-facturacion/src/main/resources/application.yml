@@ -1,0 +1,35 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: ms-facturacion
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PUERTO:3306}/${DB_NOMBRE:pedidos360}?useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USUARIO:pedidos360}
+    password: ${DB_PASSWORD:cambiar}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+
+  rabbitmq:
+    addresses: ${SPRING_RABBITMQ_ADDRESSES:localhost:5672}
+    username: ${RABBITMQ_USUARIO:pedidos360}
+    password: ${RABBITMQ_PASSWORD:cambiar}
+
+seguridad:
+  emisores: ${SEGURIDAD_EMISORES:http://localhost:9000}
+  audiencias: ${SEGURIDAD_AUDIENCIAS:}
+  origenes-cors: ${SEGURIDAD_ORIGENES_CORS:http://localhost:4200}
+  secreto-gateway: ${SEGURIDAD_SECRETO_GATEWAY:}
+
+pedidos360:
+  rabbit:
+    cola-facturacion: facturacion.ordenes
