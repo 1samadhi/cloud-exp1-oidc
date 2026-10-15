@@ -2,6 +2,25 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.8.0]
+
+- `ms-productos` suma su propio converter JSON para el listener
+  (`RabbitMessagingConfig`). Sin el, Spring Boot usaba el converter por
+  defecto, que no sabe mapear JSON a un POJO propio: la conversion fallaba
+  antes de llegar a `StockListener` y el mensaje terminaba en la DLQ sin que
+  el codigo del consumidor llegara a ejecutarse.
+- `TypePrecedence.INFERRED` en ese converter: el tipo del payload se toma del
+  parametro del metodo `@RabbitListener`, no de la cabecera `__TypeId__` que
+  pone el emisor. Es obligatorio porque `ms-ordenes` y `ms-productos` tienen
+  cada uno su propia clase `OrdenCreadaEvento`, en paquetes distintos
+  (`cl.duoc.cloud.ordenes.*` / `cl.duoc.cloud.productos.*`); con la
+  precedencia por defecto el consumidor intentaba cargar la clase del paquete
+  del productor, que no existe en su classpath, y fallaba.
+- Verificado de punta a punta contra un cluster RabbitMQ real (no mockeado):
+  una orden valida descuenta el stock exacto y queda en el log; una orden con
+  stock insuficiente no toca la tabla, se rechaza con `basicNack(requeue=false)`
+  y el mensaje aparece en `productos.stock.dlq`.
+
 ## [10.7.0]
 
 - `InicializadorRabbit` en `ms-ordenes` fuerza la declaracion de la topologia

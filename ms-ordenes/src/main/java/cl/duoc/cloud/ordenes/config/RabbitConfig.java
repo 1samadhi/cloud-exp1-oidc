@@ -188,6 +188,16 @@ public class RabbitConfig {
         return new JacksonJsonMessageConverter();
     }
 
+    /**
+     * Spring Boot no auto-configura un RabbitAdmin en esta version: hay que
+     * declararlo a mano para que InicializadorRabbit pueda forzar la
+     * declaracion de la topologia al arrancar.
+     */
+    @Bean
+    org.springframework.amqp.rabbit.core.RabbitAdmin rabbitAdmin(ConnectionFactory fabrica) {
+        return new org.springframework.amqp.rabbit.core.RabbitAdmin(fabrica);
+    }
+
     @Bean
     RabbitTemplate rabbitTemplate(ConnectionFactory fabrica, MessageConverter convertidor) {
         RabbitTemplate plantilla = new RabbitTemplate(fabrica);
