@@ -2,6 +2,24 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.7.0]
+
+- `InicializadorRabbit` en `ms-ordenes` fuerza la declaracion de la topologia
+  al arrancar. Bug real encontrado en despliegue: Spring AMQP declara los
+  `Queue`/`Exchange`/`Binding` en forma perezosa, recien cuando se abre una
+  conexion real al broker; como `ms-ordenes` es productor puro sin listener
+  propio, esa conexion no se abria hasta la primera orden creada. Hasta
+  entonces `productos.stock` no existia y el consumidor de `ms-productos`
+  quedaba reintentando conexion cada 5 segundos sin parar, con el CPU al
+  180%. Deshabilitado en pruebas por propiedad, para no exigir un broker real.
+
+## [10.6.1]
+
+- `ms-productos` tambien necesita las variables `SPRING_RABBITMQ_ADDRESSES`,
+  `RABBITMQ_USUARIO` y `RABBITMQ_PASSWORD` en `docker-compose.yml`: se habian
+  agregado solo al bloque de `ms-ordenes`, y sin ellas el consumidor de stock
+  no lograba ni conectarse al broker.
+
 ## [10.6.0]
 
 - `ms-productos` consume `orden.creada` y descuenta stock. `StockListener`

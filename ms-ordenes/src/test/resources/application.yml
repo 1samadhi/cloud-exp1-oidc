@@ -23,3 +23,10 @@ seguridad:
   origenes-cors: http://localhost:4200
   # Vacio: las pruebas no simulan el paso por el API Gateway
   secreto-gateway: ""
+
+pedidos360:
+  rabbit:
+    # Sin esto, InicializadorRabbit intenta conectarse a un broker real al
+    # arrancar el contexto de prueba y falla en cualquier maquina sin
+    # RabbitMQ levantado.
+    declarar-al-arrancar: false
