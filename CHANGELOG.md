@@ -2,6 +2,39 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.11.0]
+
+- Completado el Terraform de `infra/` (existia parcial desde antes: VPC,
+  security groups, RDS, EC2). Se agrego lo que faltaba para que un compañero
+  pueda levantar su propia copia con `terraform apply` solo:
+  - `infra/user-data.sh` (no existia; `main.tf` lo referenciaba y el apply
+    habria fallado de entrada). Solo instala Docker y clona los repos: el
+    build/deploy de la app sigue yendo por SSM despues, asi un redeploy
+    normal no obliga a recrear la instancia.
+  - `infra/api-gateway.tf`: las 10 rutas + autorizador JWT, antes solo
+    existian como `scripts/crear-api-gateway.sh` imperativo. Las integraciones
+    usan `for_each` sobre una lista unica (`locals.rutas`) para que agregar
+    una ruta sea una linea, no un bloque de recursos repetido.
+  - `infra/outputs.tf`: IP de la EC2, endpoint del RDS, URL del API Gateway.
+  - Bug real encontrado al verificar: `crear-api-gateway.sh` nunca inyectaba
+    la cabecera `X-Origen-Gateway` en las integraciones del front (`GET /` y
+    `ANY /{proxy+}`), aunque si lo hacia en las de los microservicios (fix
+    aplicado a mano en una sesion anterior, nunca portado al script). El front
+    respondia 403 aunque el login funcionara. Corregido en el script y en
+    Terraform (ahi ya no puede faltar: esta en el recurso compartido).
+  - Subido el default de `tipo_instancia` a `t3.medium`: un `t3.small` con 7
+    microservicios + 2 nodos RabbitMQ deja la instancia inutilizable (medido
+    hoy: SSM sin responder 10+ minutos).
+  - `infra/README.md` con los pasos para un lab nuevo y los problemas ya
+    encontrados, para que un companero no los repita.
+- Desplegado `front-angular` en la EC2 (antes fallaba: el compose intentaba
+  hacer `pull` de una imagen que no existe en ningun registro en vez de
+  construirla con `docker build`, como ya hacia `scripts/desplegar-en-ec2.sh`).
+- Instancia EC2 redimensionada a `t3.medium` (de `t3.small`) por el mismo
+  motivo: con los 9 contenedores (7 microservicios + 2 nodos RabbitMQ) la
+  instancia pequeña quedaba inutilizable. La IP publica cambio; las 10
+  integraciones del API Gateway se reapuntaron.
+
 ## [10.10.0]
 
 - Nuevos microservicios **`ms-notificaciones`** y **`ms-facturacion`**

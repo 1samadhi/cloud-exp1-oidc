@@ -19,6 +19,7 @@ REGION=${AWS_REGION:-us-east-1}
 STAGE=${STAGE:-desarrollo}
 : "${ENTRA_TENANT_ID:?Define ENTRA_TENANT_ID (export set -a; . ./.env)}"
 : "${ENTRA_CLIENT_ID:?Define ENTRA_CLIENT_ID (export set -a; . ./.env)}"
+: "${SEGURIDAD_SECRETO_GATEWAY:?Define SEGURIDAD_SECRETO_GATEWAY (export set -a; . ./.env)}"
 
 echo "Creando la API para la EC2 $IP"
 
@@ -44,6 +45,8 @@ RUTAS=(
   "ANY /v1/carrito/{proxy+}|http://$IP:8082/api/v1/carrito/{proxy}|si"
   "ANY /v1/ordenes|http://$IP:8083/api/v1/ordenes|si"
   "ANY /v1/ordenes/{proxy+}|http://$IP:8083/api/v1/ordenes/{proxy}|si"
+  "ANY /v1/admin/{proxy+}|http://$IP:8084/v1/admin/{proxy}|si"
+  "ANY /v1/facturas/{proxy+}|http://$IP:8086/api/v1/facturas/{proxy}|si"
   "POST /auth/registro|http://$IP:9000/auth/registro|no"
   "GET /|http://$IP:80/|no"
   "ANY /{proxy+}|http://$IP:80/{proxy}|no"
@@ -54,6 +57,7 @@ for ENTRADA in "${RUTAS[@]}"; do
   INT_ID=$(aws apigatewayv2 create-integration --api-id "$API_ID" \
     --integration-type HTTP_PROXY --integration-method ANY \
     --integration-uri "$URI" --payload-format-version 1.0 \
+    --request-parameters "overwrite:header.X-Origen-Gateway=$SEGURIDAD_SECRETO_GATEWAY" \
     --region "$REGION" --query IntegrationId --output text)
   if [[ "$PROTEGIDA" == "si" ]]; then
     aws apigatewayv2 create-route --api-id "$API_ID" --route-key "$CLAVE" \

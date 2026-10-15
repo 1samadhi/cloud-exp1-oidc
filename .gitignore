@@ -18,3 +18,13 @@ llaves/
 
 # Archivos de bloqueo de LibreOffice
 .~lock.*
+
+# Terraform: el estado tiene recursos reales (IDs, IPs) y puede traer el
+# password del RDS en texto plano si queda en un plan guardado. El lock file
+# (.terraform.lock.hcl) SI se versiona: fija la version del provider para que
+# a todos les resuelva el mismo plan.
+infra/.terraform/
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+infra/*.tfplan
+infra/*.auto.tfvars
