@@ -25,13 +25,22 @@ public class Producto {
     @Column(nullable = false)
     private int precio;
 
+    /**
+     * Unidades disponibles. Lo descuenta el consumidor de stock al procesar
+     * "orden.creada"; nunca se escribe desde un endpoint REST expuesto al
+     * cliente.
+     */
+    @Column(nullable = false)
+    private int stock;
+
     /** Requerido por JPA. No se usa desde el codigo de la aplicacion. */
     protected Producto() {
     }
 
-    public Producto(String nombre, int precio) {
+    public Producto(String nombre, int precio, int stock) {
         this.nombre = nombre;
         this.precio = precio;
+        this.stock = stock;
     }
 
     public Long getId() {
@@ -44,5 +53,22 @@ public class Producto {
 
     public int getPrecio() {
         return precio;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    /**
+     * Descuenta unidades del stock.
+     *
+     * @throws StockInsuficienteException si no alcanza; es un error de negocio,
+     *         no transitorio: reintentar el mismo mensaje no lo arregla.
+     */
+    public void descontarStock(int cantidad) {
+        if (cantidad > stock) {
+            throw new StockInsuficienteException(id, cantidad, stock);
+        }
+        stock -= cantidad;
     }
 }

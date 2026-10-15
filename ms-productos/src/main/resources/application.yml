@@ -23,6 +23,18 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
     open-in-view: false
 
+  rabbitmq:
+    # Los dos nodos del cluster: si uno cae, el cliente usa el otro.
+    addresses: ${SPRING_RABBITMQ_ADDRESSES:localhost:5672}
+    username: ${RABBITMQ_USUARIO:pedidos360}
+    password: ${RABBITMQ_PASSWORD:cambiar}
+    listener:
+      simple:
+        # Nada se confirma solo: cada mensaje pasa por basicAck/basicNack
+        # explicito en StockListener.
+        acknowledge-mode: manual
+        prefetch: 1
+
 seguridad:
   # Emisores cuyos tokens acepta este Resource Server. Se agregan Cognito y
   # Entra ID separandolos por coma, sin tocar el codigo.
@@ -34,3 +46,10 @@ seguridad:
   # Cabecera que inyecta el API Gateway en cada integracion. Vacio en local
   # desactiva la comprobacion. Ver docs/03-api-gateway.md.
   secreto-gateway: ${SEGURIDAD_SECRETO_GATEWAY:}
+
+# Nombre de la cola que escucha StockListener. Tiene que coincidir con
+# pedidos360.rabbit.cola-stock de ms-ordenes, que es quien la declara junto
+# con su DLQ. Documentado en rabbitmq/TOPOLOGIA.md.
+pedidos360:
+  rabbit:
+    cola-stock: productos.stock

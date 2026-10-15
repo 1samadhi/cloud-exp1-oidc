@@ -17,6 +17,14 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
 
+  rabbitmq:
+    listener:
+      simple:
+        # Las pruebas no simulan el broker: sin esto, el contenedor del
+        # listener intenta conectarse a RabbitMQ al arrancar el contexto y la
+        # suite falla en cualquier maquina sin el cluster levantado.
+        auto-startup: false
+
 seguridad:
   emisores: https://login.microsoftonline.com/tenant-de-prueba/v2.0
   audiencias: ""

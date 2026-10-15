@@ -2,6 +2,25 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.6.0]
+
+- `ms-productos` consume `orden.creada` y descuenta stock. `StockListener`
+  (`mensajeria/consumidor/stock/`) con ACK manual: `basicAck` si procesa bien;
+  `basicNack(requeue=true)` en error transitorio, con limite de 3 reintentos
+  leidos de la cabecera `x-death`; agotado el limite o ante un error de
+  negocio (producto inexistente, stock insuficiente) `basicNack(requeue=false)`
+  y el mensaje cae en su DLQ, que ya declaraba `ms-ordenes`.
+- `Producto` suma el campo `stock`. `descontarStock()` valida que alcance antes
+  de restar; si no, lanza `StockInsuficienteException`, que el listener trata
+  como error permanente porque reintentar el mismo mensaje no cambia el
+  resultado.
+- El productor del API Gateway corrigio un bug propio: las integraciones no
+  inyectaban la cabecera `X-Origen-Gateway`, asi que hasta el trafico que
+  pasaba por el gateway llegaba como si viniera directo a la EC2. Se corrigio
+  con `overwrite:header.X-Origen-Gateway` en cada integracion.
+- 5 pruebas de `StockListenerTest` cubren los tres desenlaces sin exigir un
+  broker levantado.
+
 ## [10.5.0]
 
 - `scripts/crear-api-gateway.sh`: crea la API completa desde cero (rutas,

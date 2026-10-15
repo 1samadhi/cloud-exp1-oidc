@@ -29,10 +29,10 @@ public class DatosIniciales implements CommandLineRunner {
         if (repositorio.count() > 0) {
             return;
         }
-        repositorio.save(new Producto("Teclado mecanico", 45990));
-        repositorio.save(new Producto("Mouse inalambrico", 19990));
-        repositorio.save(new Producto("Monitor 27 pulgadas", 189990));
-        repositorio.save(new Producto("Audifonos con cancelacion de ruido", 89990));
+        repositorio.save(new Producto("Teclado mecanico", 45990, 25));
+        repositorio.save(new Producto("Mouse inalambrico", 19990, 40));
+        repositorio.save(new Producto("Monitor 27 pulgadas", 189990, 10));
+        repositorio.save(new Producto("Audifonos con cancelacion de ruido", 89990, 15));
         log.info("Catalogo inicial sembrado: {} productos", repositorio.count());
     }
 }
