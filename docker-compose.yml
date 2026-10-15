@@ -166,11 +166,11 @@ services:
     image: exp1/front-angular:6.0.0
     container_name: front-angular
     restart: unless-stopped
-    environment:
-      # nginx rechaza con 403 lo que no venga del API Gateway. Vacio lo desactiva.
-      SECRETO_GATEWAY: ${SEGURIDAD_SECRETO_GATEWAY:-}
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - /home/ec2-user/certs:/etc/nginx/certs:ro
     depends_on:
       - ms-auth
       - ms-productos
