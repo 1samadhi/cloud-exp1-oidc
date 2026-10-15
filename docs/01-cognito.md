@@ -7,11 +7,11 @@ cambian de codigo para aceptarlo: basta agregar su issuer a `SEGURIDAD_EMISORES`
 
 | Recurso              | Valor                                                        |
 |----------------------|--------------------------------------------------------------|
-| User Pool            | `us-east-1_9su4GmYfk`                                             |
-| Issuer               | `https://cognito-idp.us-east-1.amazonaws.com/us-east-1_9su4GmYfk` |
-| Dominio              | `exp1-oidc-u4gmyfk`                                       |
+| User Pool            | `us-east-1_OQ82j9BOi`                                             |
+| Issuer               | `https://cognito-idp.us-east-1.amazonaws.com/us-east-1_OQ82j9BOi` |
+| Dominio              | `pedidos360-oq82j9boi`                                       |
 | Resource Server      | `exp1-api`                                                   |
-| Cliente maquina a maquina | `5ag8ir0tp98mgfsh5kn53j5jfr`                             |
+| Client SPA (front, Authorization Code + PKCE) | `20jn3q3vg0rd2d26jb9gq4dafg` |
 
 El *client secret* no aparece aqui ni en el repositorio: vive solo en el archivo
 `.env` local, que esta en `.gitignore`.

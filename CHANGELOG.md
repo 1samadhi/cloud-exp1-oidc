@@ -2,6 +2,29 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.12.0]
+
+- Recreado Cognito desde cero: el User Pool anterior (`us-east-1_wxeYD55lo`,
+  documentado en `docs/01-cognito.md`) ya no existia en la cuenta del lab
+  reiniciado. Nuevo pool (`us-east-1_OQ82j9BOi`), resource server `exp1-api`
+  con los mismos 4 scopes, dominio `pedidos360-oq82j9boi`, y un client SPA
+  (`20jn3q3vg0rd2d26jb9gq4dafg`, Authorization Code + PKCE, sin secreto) para
+  el boton "Acceso externo" del front.
+- `SEGURIDAD_EMISORES` en el `.env` de la EC2 ahora incluye el issuer de
+  Cognito ademas del de Entra: los microservicios aceptan ambos sin
+  recompilar (el diseño multi-emisor ya estaba, solo faltaba el segundo
+  emisor real).
+- `front-angular`: `environment.ts`/`environment.prod.ts` apuntaban al API
+  Gateway de una sesion de lab anterior (`0nxb0dg1ub`, ya inexistente) en
+  `apiBase` y en los `redirectUri`/`logoutUri` de Entra y Cognito. Causa real
+  del "Error 0" al llamar cualquier endpoint, incluido el publico sin token.
+  Corregido a la API actual (`8b3fvdvhe6`).
+- Redirect URI nueva agregada al registro SPA de la app en Entra ID (via
+  Microsoft Graph, `az rest`) sin borrar las anteriores.
+- Verificado: `/v1/public` responde desde el navegador real, el login de
+  Microsoft redirige sin `redirect_uri_mismatch`, y el dominio de Cognito
+  devuelve la pantalla de login (`<title>Signin</title>`) sin error.
+
 ## [10.11.0]
 
 - Completado el Terraform de `infra/` (existia parcial desde antes: VPC,
