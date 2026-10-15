@@ -1,0 +1,13 @@
+# Dockerfile liviano: usa un jar ya compilado (target/*.jar) en vez de correr
+# Maven dentro del contenedor. Pensado para instancias EC2 con poca RAM: la
+# compilacion se hace en otra maquina y aqui solo se arma la imagen.
+#
+# Uso: mvn -B clean package -DskipTests   (en una maquina con mas memoria)
+#      docker build -f Dockerfile.liviano -t exp1/ms-rabbit-admin:1.0.0 .
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+RUN addgroup -S spring && adduser -S spring -G spring
+COPY target/ms-rabbit-admin-1.0.0.jar app.jar
+USER spring:spring
+EXPOSE 8084
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
