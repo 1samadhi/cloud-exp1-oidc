@@ -2,6 +2,7 @@ package cl.duoc.cloud.rabbitadmin.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,9 +23,13 @@ import jakarta.validation.Valid;
  *
  * No modela el dominio de pedidos360: es una herramienta operativa para crear
  * o borrar colas/exchanges/bindings sin entrar a la consola de management.
+ *
+ * Reservado al rol ADMIN: un usuario comun (rol USER) nunca deberia poder
+ * tocar la topologia de mensajeria del sistema completo.
  */
 @RestController
 @RequestMapping("/v1/admin")
+@PreAuthorize("hasRole('ADMIN')")
 public class RabbitAdminV1Controller {
 
     private final RabbitAdminService servicio;
