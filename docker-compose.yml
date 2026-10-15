@@ -43,6 +43,11 @@ services:
       SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:4200}
       # Exige que la peticion venga del API Gateway. Vacio lo desactiva.
       SEGURIDAD_SECRETO_GATEWAY: ${SEGURIDAD_SECRETO_GATEWAY:-}
+      # Los dos nodos del cluster: si uno cae, el cliente usa el otro. Las
+      # consume StockListener para descontar stock al recibir "orden.creada".
+      SPRING_RABBITMQ_ADDRESSES: ${SPRING_RABBITMQ_ADDRESSES:-rabbitmq-1:5672,rabbitmq-2:5672}
+      RABBITMQ_USUARIO: ${RABBITMQ_USUARIO:-pedidos360}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-cambiar}
 
   ms-carrito:
     build: ./ms-carrito
