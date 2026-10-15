@@ -98,6 +98,25 @@ services:
       RABBITMQ_USUARIO: ${RABBITMQ_USUARIO:-pedidos360}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-cambiar}
 
+  # Administra la topologia de RabbitMQ por REST (crear/borrar colas,
+  # exchanges y bindings). No toca el dominio de negocio: es una herramienta
+  # operativa, por eso no depende de ms-productos ni de la base de datos.
+  ms-rabbit-admin:
+    build: ./ms-rabbit-admin
+    image: exp1/ms-rabbit-admin:1.0.0
+    container_name: ms-rabbit-admin
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      SEGURIDAD_EMISORES: ${SEGURIDAD_EMISORES:-http://localhost:9000}
+      SEGURIDAD_AUDIENCIAS: ${SEGURIDAD_AUDIENCIAS:-c483f102-da2d-41b5-b48e-26e7ca78ab98,api://c483f102-da2d-41b5-b48e-26e7ca78ab98}
+      SEGURIDAD_ORIGENES_CORS: ${SEGURIDAD_ORIGENES_CORS:-http://localhost:4200}
+      SEGURIDAD_SECRETO_GATEWAY: ${SEGURIDAD_SECRETO_GATEWAY:-}
+      SPRING_RABBITMQ_ADDRESSES: ${SPRING_RABBITMQ_ADDRESSES:-rabbitmq-1:5672,rabbitmq-2:5672}
+      RABBITMQ_USUARIO: ${RABBITMQ_USUARIO:-pedidos360}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-cambiar}
+
   # El frontend vive en su propio repositorio:
   #   https://github.com/1samadhi/cloud-exp1-front-angular
   # Se construye alli y aqui solo se ejecuta la imagen resultante.

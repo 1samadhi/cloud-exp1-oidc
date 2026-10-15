@@ -1,0 +1,19 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: ms-rabbit-admin
+
+  rabbitmq:
+    addresses: ${SPRING_RABBITMQ_ADDRESSES:localhost:5672}
+    username: ${RABBITMQ_USUARIO:pedidos360}
+    password: ${RABBITMQ_PASSWORD:cambiar}
+
+seguridad:
+  emisores: ${SEGURIDAD_EMISORES:http://localhost:9000}
+  audiencias: ${SEGURIDAD_AUDIENCIAS:}
+  origenes-cors: ${SEGURIDAD_ORIGENES_CORS:http://localhost:4200}
+  # Cabecera que inyecta el API Gateway en cada integracion. Vacio en local
+  # desactiva la comprobacion. Ver docs/03-api-gateway.md.
+  secreto-gateway: ${SEGURIDAD_SECRETO_GATEWAY:}

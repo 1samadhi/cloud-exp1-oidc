@@ -1,0 +1,6 @@
+seguridad:
+  emisores: https://login.microsoftonline.com/tenant-de-prueba/v2.0
+  audiencias: ""
+  origenes-cors: http://localhost:4200
+  # Vacio: las pruebas no simulan el paso por el API Gateway
+  secreto-gateway: ""

@@ -2,6 +2,22 @@
 
 El versionado sigue [SemVer](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
 
+## [10.9.0]
+
+- Nuevo microservicio **`ms-rabbit-admin`**: administra la topologia de
+  RabbitMQ por REST sin entrar a la consola de management. `POST/DELETE
+  /v1/admin/colas`, `/exchanges` y `/bindings`. Logica encapsulada en
+  `RabbitAdminService`, que envuelve `AmqpAdmin` (lo pide la pauta separado
+  del controller).
+- Solo rol `ADMIN` puede llamarlo: a diferencia de los demas microservicios,
+  este puede borrar infraestructura, asi que "autenticado" no alcanza.
+- Validacion con `@Valid`/`@NotBlank` en los DTO y lista blanca de tipos de
+  exchange (`direct`/`topic`/`fanout`/`headers`); un tipo invalido es 400 con
+  mensaje claro, no una excepcion generica del driver AMQP.
+- 13 pruebas: logica de `RabbitAdminService` con `AmqpAdmin` mockeado, y
+  autorizacion/validacion del controller con `MockMvc`. Arranque real
+  verificado contra el cluster local antes del despliegue (sin token → 401).
+
 ## [10.8.0]
 
 - `ms-productos` suma su propio converter JSON para el listener
